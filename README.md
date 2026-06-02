@@ -8,6 +8,8 @@ it has a simple tags for free/inuse memory, and reasonable algorithm to allocate
 and small sized allocations.
 
 ## Design
+
+### Chunks
 Chunks are the atoms of this whole allocator business, and are present continguosely in memory
 
 The basic structure(at least, to have a good mental model) is this:
@@ -47,3 +49,12 @@ When a chunk is freed, it writes it's size to it's *bk pointer(of size INTERNAL_
 
 So, when we need to merge, we can just look at the in_use flag in size, if it is free, we just offset backward, the pointer to the chunk
 by the prev_size bytes
+
+### Bins
+There are 4 categories of bins
+1. **Fast Bins**: this typically contains recently freed chunk(by default <= 64 bytes), this is a LIFO(like a stack). Index = (size >> 3) - 2
+2. **Small Bins**: This contains chunks of sizes 16..=248 bytes. Each bin is seperated linearly by 8 bytes, and the size of each bin's chunk is 8*i. Near instant allocation(assuming the bin has free chunks), but optimizations like bitmap(discussed below) can optimize it's speed. This is a FIFO. Bin index for a specific size allocation(16..=248 bytes, size % 8 == 0) can be calculated using size >> 3
+3. **Large Bins**: Not going to support in the first versions, but it will be >= 256 bytes, with logarithmic spacing instead of linear.
+
+### Binmap
+An optimization technique to skip over empty bins
