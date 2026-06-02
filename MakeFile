@@ -1,0 +1,9 @@
+MODULES = src/chunk.c src/malloc.c
+OUT_LOCATION = ./exec/exec
+CC = gcc
+OPTIONS = -O2
+
+build:
+    $(CC) -o $(OUT_LOCATION) $(OPTIONS) $(MODULES)
+build_and_run_ex:
+    make build examples/normal_allocation.c && ./exec/exec
