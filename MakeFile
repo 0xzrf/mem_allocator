@@ -1,9 +1,13 @@
-MODULES = src/chunk.c src/malloc.c
-OUT_LOCATION = ./exec/exec
+MODULES = src/malloc.c
+OUT = exec/exec
 CC = gcc
-OPTIONS = -O2
+CFLAGS = -O2 -Iinclude
+
+.PHONY: build build_and_run_ex
 
 build:
-    $(CC) -o $(OUT_LOCATION) $(OPTIONS) $(MODULES)
-build_and_run_ex:
-    make build examples/normal_allocation.c && ./exec/exec
+	mkdir -p exec
+	$(CC) $(CFLAGS) -o $(OUT) examples/normal_allocation.c $(MODULES)
+
+build_and_run_ex: build
+	./$(OUT)
