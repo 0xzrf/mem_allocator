@@ -22,6 +22,7 @@ struct malloc_chunk {
 ```
 
 In memory, it looks something like this(if in-use by program):
+```
 chunk ptr ->  +----------------------------+
               | prev_size (or prev's data) |   <- 4 bytes
               +----------------------------+
@@ -32,6 +33,7 @@ chunk ptr ->  +----------------------------+
               |                            |
               +----------------------------+
               | (next chunk's prev_size)   |
+```
 
 the user's data(fd) can be retrieved by skipping over the 2 size headers
 
