@@ -39,3 +39,9 @@ the user's data(fd) can be retrieved by skipping over the 2 size headers
 
 Notice the lower 3 bits of `size`, since the allocation is a multiple of 8, the lower 3 bits are always zero(fun fact)
 though we only care about the lowest bit, it is set to 0 if it's not in use, and 1 otherwise
+
+now, the prev size is interesting, as it allows to go back to the prev. chunk
+When a chunk is freed, it writes it's size to it's *bk pointer(of size INTERNAL_SIZE_T), which writes to the next chunk's prev_size field
+
+So, when we need to merge, we can just look at the in_use flag in size, if it is free, we just offset backward, the pointer to the chunk
+by the prev_size bytes
