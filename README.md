@@ -7,6 +7,9 @@ Why did I choose this? Well, it's pretty simple, and gets you going with memory 
 it has a simple tags for free/inuse memory, and reasonable algorithm to allocate memory, prioritizing locality
 and small sized allocations.
 
+The design and flow is inspired by the following repo: https://github.com/ennorehling/dlmalloc/blob/master/malloc.c
+I'm just trying to implement it on my own to understand different kinds of memory allocators implementations
+
 ## Design
 
 ### Chunks
@@ -57,4 +60,4 @@ There are 4 categories of bins
 3. **Large Bins**: Not going to support in the first versions, but it will be >= 256 bytes, with logarithmic spacing instead of linear.
 
 ### Binmap
-An optimization technique to skip over empty bins
+An optimization technique to skip over empty bins(will edit more based on what I learn)
