@@ -9,8 +9,9 @@
 /* size field is or'ed with PREV_INUSE when previous adjacent chunk in use */
 #define PREV_INUSE 0x1
 /* extract inuse bit of previous chunk */
-#define prev_inuse(p)       ((p)->size & PREV_INUSE)
+#define prev_inuse(p) ((p)->size & PREV_INUSE)
 
+#define prev_chunk(p) ((chunk_ptr)((BYTE_PTR)(p) - ((p)->prev_size) ))
 
 /*
  * This is a chunk header, which is mainly used for double-linked list
