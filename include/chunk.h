@@ -2,6 +2,7 @@
 #define alloc_chunk_h
 
 #include "common.h"
+#include "bins.h"
 
 // Helper macros
 #define mem_2_chunk(mem) ((chunk_ptr)((BYTE_PTR)(mem) - 2 * SIZE_SZ))
@@ -30,5 +31,11 @@ struct chunk_header {
 };
 
 #define chunk_ptr chunk_header *
+
+struct malloc_state {
+    chunk_ptr top; // this is the location which will be allocated memory(and given back to the user) if bins are empty
+};
+
+typedef malloc_state *mstate;
 
 #endif
