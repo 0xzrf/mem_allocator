@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "bins.h"
+#include <stdbool.h>
 
 // Helper macros
 #define mem_2_chunk(mem) ((chunk_ptr)((BYTE_PTR)(mem) - 2 * SIZE_SZ))
@@ -26,16 +27,18 @@ struct chunk_header {
     INTERNAL_SIZE_T prev_size;
     INTERNAL_SIZE_T size;
 
-    chunk_header* data;
-    chunk_header* next_chunk;
+    struct chunk_header* data;
+    struct chunk_header* next_chunk;
 };
 
-#define chunk_ptr chunk_header *
+typedef struct chunk_header *chunk_ptr;
 
 struct malloc_state {
     chunk_ptr top; // this is the location which will be allocated memory(and given back to the user) if bins are empty
+    bool has_chunk;
+    chunk_ptr bins[NBINS];
 };
 
-typedef malloc_state *mstate;
+typedef struct malloc_state *mstate;
 
 #endif

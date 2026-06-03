@@ -1,9 +1,13 @@
 #include "../include/malloc.h"
 
+static mstate malloc_state;
 
 void *malloc(size_t size) {
     printf("Allocating memory\n");
-   return get_mem_from_os(size);
+
+    size_t normalized_size = request_2_size(size);
+
+    return get_mem_from_os(size);
 }
 
 void *get_mem_from_os(size_t size) {

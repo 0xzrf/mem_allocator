@@ -1,9 +1,7 @@
 MODULES = src/malloc.c
 OUT = exec/exec
-CC = clang
+CC = gcc
 CFLAGS = -O2 -Iinclude
-
-.PHONY: build build_and_run_ex
 
 build:
 	mkdir -p exec
