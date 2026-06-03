@@ -7,6 +7,21 @@ void *malloc(size_t size) {
 
     size_t normalized_size = request_2_size(size);
 
+    /*
+     * we need to check to see if the bins are populated or not(from malloc_state)
+     * If not, the path would be to check the top(wilderness) chunk, which will have
+     * additional memory allocated to it
+     *
+     * This will be called when the malloc is first called, and later populate the bins
+     * when the program frees the memory allocated by this malloc
+     */
+    if (!has_any_chunk(malloc_state)) {
+        if(malloc_state->max_fast == 0) {
+            init_malloc_state();
+        }
+        return use_top();
+    }
+
     return get_mem_from_os(size);
 }
 

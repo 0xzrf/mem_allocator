@@ -33,9 +33,14 @@ struct chunk_header {
 
 typedef struct chunk_header *chunk_ptr;
 
+#define has_any_chunk(malloc_state) ((malloc_state)->has_chunk)
+
 struct malloc_state {
     chunk_ptr top; // this is the location which will be allocated memory(and given back to the user) if bins are empty
     bool has_chunk;
+
+    INTERNAL_SIZE_T max_fast;
+
     chunk_ptr bins[NBINS];
 };
 
