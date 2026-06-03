@@ -25,6 +25,17 @@ void *malloc(size_t size) {
     return get_mem_from_os(size);
 }
 
+void init_malloc_state() {
+    chunk_ptr bin;
+    for (size_t i = 0; i < NBINS; i++) {
+        bin = bin_at(i);
+        bin->data = bin; // TODO: We might later add the `bk` field, which will need to be initialized to bin here
+    }
+
+    malloc_state->top->size = 0;
+    malloc_state->top->data = NULL;
+}
+
 void *get_mem_from_os(size_t size) {
     void *mem =  mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, 0, 0);
 

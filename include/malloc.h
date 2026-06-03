@@ -5,6 +5,8 @@
 #include "common.h"
 #include "chunk.h"
 
+#define bin_at(i) (malloc_state->bins[i])
+
 void *malloc(size_t);
 
 static void init_malloc_state();
