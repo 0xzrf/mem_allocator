@@ -29,4 +29,6 @@ struct chunk_header {
     chunk_header* next_chunk;
 };
 
+#define chunk_ptr chunk_header *
+
 #endif

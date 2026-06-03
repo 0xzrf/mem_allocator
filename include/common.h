@@ -1,6 +1,3 @@
-#ifndef alloc_common_h
-#define alloc_common_h
-
 #include <stddef.h>
 #include <stdint.h>
 
@@ -18,7 +15,3 @@
     ((req) + SIZE_SZ + MALLOC_ALIGN_MASK > MIN_REQ_SIZE) ?  \
     MIN_REQ_SIZE :                                          \
     ((req) + SIZE_SZ + MALLOC_ALIGN_MASK) & ~MALLOC_ALIGN_MASK)
-
-#define chunk_ptr chunk_header *
-
-#endif

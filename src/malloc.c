@@ -1,6 +1,5 @@
 #include "../include/malloc.h"
-#include <stdlib.h>
-#include <errno.h>
+
 
 void *malloc(size_t size) {
     printf("Allocating memory\n");
