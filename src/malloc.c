@@ -34,19 +34,17 @@ void *malloc(size_t size) {
 
 static void init_malloc_state(mstate ms) {
   chunk_ptr bin;
-  for (size_t i = 0; i < NBINS; i++) {
+  for (size_t i = 1; i < NBINS; i++) {
     bin = bin_at(ms, i);
     bin->data = bin->next_chunk = bin; // bin == bin.data == bin.next_chunk is
                                        // how we know that a bin is empty
   }
-
-  ms->top->size = 0;
-  ms->top->data = ms->top->next_chunk = NULL;
+  ms->top = initial_top(ms);
 }
 
 static void *use_top(mstate ms, size_t size) {
   printf("running use_top\n");
-  void *mem = NULL;
+  void *mem;
   int new_size;
   if (chunksize(ms->top) < size) {
     mem = get_mem_from_os(SYS_ALLOC_PAGE_SIZE);
