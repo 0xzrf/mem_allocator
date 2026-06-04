@@ -1,13 +1,9 @@
 #include "../include/malloc.h"
-#include <string.h>
 
-static mstate malloc_state;
+static struct malloc_state malloc_state;
 
-/* dlmalloc-style empty-bin sentinels: each bin list head lives here */
-static struct chunk_header bin_heads[NBINS];
-
-static void init_malloc_state(void);
-static void *use_top(size_t size);
+static void init_malloc_state(mstate);
+static void *use_top(mstate, size_t size);
 static void *get_mem_from_os(size_t size);
 
 void *malloc(size_t size) {
@@ -15,6 +11,7 @@ void *malloc(size_t size) {
 
   size_t normalized_size = request_2_size(size);
 
+  mstate ms = get_malloc_state();
   /*
    * we need to check to see if the bins are populated or not(from malloc_state)
    * If not, the path would be to check the top(wilderness) chunk, which will
@@ -24,61 +21,44 @@ void *malloc(size_t size) {
    * bins when the program frees the memory allocated by this malloc
    */
 
-  if (malloc_state == NULL) {
-    static struct malloc_state m;
-    memset(&m, 0, sizeof(m));
-    malloc_state = &m;
-  }
-
-  if (!has_any_chunk(malloc_state)) {
-    if (malloc_state->max_fast == 0) {
-      init_malloc_state();
+  if (!has_any_chunk(ms)) {
+    if (ms->max_fast == 0) {
+      init_malloc_state(ms);
     }
-    return use_top(normalized_size);
+    return use_top(ms, normalized_size);
   }
 
   // TODO: Get mem from bins
   return get_mem_from_os(size);
 }
 
-static void init_malloc_state(void) {
+static void init_malloc_state(mstate ms) {
   chunk_ptr bin;
-  void *arena;
-
   for (size_t i = 0; i < NBINS; i++) {
-    /* point bin slot at its sentinel header, then circular empty list */
-    malloc_state->bins[i] = &bin_heads[i];
-    bin = bin_at(i);
-    bin->prev_size = 0;
-    bin->size = 0;
-    bin->data = bin;
-    bin->next_chunk = bin; // bin == bin.data == bin.next_chunk => empty bin
+    bin = bin_at(ms, i);
+    bin->data = bin->next_chunk = bin; // bin == bin.data == bin.next_chunk is
+                                       // how we know that a bin is empty
   }
 
-  /* wilderness (top) chunk: one mmap'd arena with header at the base */
-  arena = get_mem_from_os(SYS_ALLOC_PAGE_SIZE);
-  malloc_state->top = (chunk_ptr)arena;
-  malloc_state->top->prev_size = 0;
-  malloc_state->top->size = SYS_ALLOC_PAGE_SIZE - MIN_CHUNK_SIZE;
-  malloc_state->top->data = (void *)((BYTE_PTR)arena + MIN_CHUNK_SIZE);
-  malloc_state->top->next_chunk = NULL;
+  ms->top->size = 0;
+  ms->top->data = ms->top->next_chunk = NULL;
 }
 
-static void *use_top(size_t size) {
+static void *use_top(mstate ms, size_t size) {
+  printf("running use_top\n");
   void *mem = NULL;
   int new_size;
-  if (chunksize(malloc_state->top) < size) {
+  if (chunksize(ms->top) < size) {
     mem = get_mem_from_os(SYS_ALLOC_PAGE_SIZE);
     new_size = SYS_ALLOC_PAGE_SIZE;
   } else {
-    mem = malloc_state->top->data;
-    new_size = (int)(chunksize(malloc_state->top) - size);
+    mem = ms->top->data;
+    new_size = ms->top->prev_size - size;
   }
 
-  malloc_state->top->data =
-      mem + size; // bumps up the pointer of top by size(since it's being
-                  // allocated to the program)
-  malloc_state->top->size = new_size;
+  ms->top->data = mem + size; // bumps up the pointer of top by size(since it's
+                              // being allocated to the program)
+  ms->top->size = new_size;
 
   return mem;
 }
