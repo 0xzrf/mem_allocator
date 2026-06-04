@@ -1,7 +1,7 @@
 MODULES = src/malloc.c
 OUT = exec/exec
 CC = gcc
-CFLAGS = -O2 -Iinclude
+CFLAGS = -O2 -Iinclude -Wall -Wextra -Werror
 
 build:
 	mkdir -p exec

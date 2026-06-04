@@ -22,6 +22,7 @@ void *malloc(size_t size) {
         return use_top(size);
     }
 
+    // TODO: Get mem from bins
     return get_mem_from_os(size);
 }
 
@@ -60,3 +61,10 @@ void *get_mem_from_os(size_t size) {
     }
     return mem;
 }
+
+
+#ifdef UNIT_TESTING
+
+
+
+#endif
