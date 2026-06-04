@@ -9,3 +9,9 @@ build:
 
 build_and_run_ex: build
 	./$(OUT)
+
+TEST_OUT = exec/test_exec
+TEST_MODULES = tests/unit/test_chunk.c tests/test_runner/run_tests.c tests/unity/unity.c
+
+test:
+	$(CC) $(CFLAGS) -o $(TEST_OUT) $(TEST_MODULES) && ./$(TEST_OUT)
