@@ -1,5 +1,7 @@
 #define MAX_FAST_SIZE 80
 
+#define DEFAULT_MAX_FASTBIN_SIZE 64
+
 #define NBINS              96 // total bins
 #define NSMALLBINS         32 // small bins seperated by 8 bytes each(8..=248)
 #define NFASTBINS (fastbin_index(request_2_size(MAX_FAST_SIZE)) + 1)
