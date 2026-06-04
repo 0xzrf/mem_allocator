@@ -61,10 +61,3 @@ void *get_mem_from_os(size_t size) {
     }
     return mem;
 }
-
-
-#ifdef UNIT_TESTING
-
-
-
-#endif
