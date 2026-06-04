@@ -33,13 +33,22 @@ void init_malloc_state() {
     }
 
     malloc_state->top->size = 0;
-    malloc_state->top->data = NULL;
+    malloc_state->top->data = malloc_state->top->next_chunk = NULL;
 }
 
 void *use_top(size_t size) {
+    void *mem = NULL;
     if (chunksize(malloc_state->top) < size) {
-
+        mem = get_mem_from_os(SYS_ALLOC_PAGE_SIZE);
+        set_chunksize(malloc_state->top, SYS_ALLOC_PAGE_SIZE);
+    } else {
+        mem = malloc_state->top->data;
+        int new_size = malloc_state->top->prev_size - size;
+        set_chunksize(malloc_state->top, new_size);
     }
+
+    malloc_state->top->data = mem + size; // bumps up the pointer of top by size(since it's being allocated to the program)
+    return mem;
 }
 
 void *get_mem_from_os(size_t size) {

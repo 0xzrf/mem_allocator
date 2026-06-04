@@ -19,6 +19,8 @@
 #define prev_chunk(p) ((chunk_ptr)((BYTE_PTR)(p) - ((p)->prev_size) ))
 
 #define chunksize(p) ((p)->size & ~(SIZE_BITS))
+// set every bit and preserve the last flag bit
+#define set_chunksize(p, s) ((p)->size = s | ((p)->size & ~ANYCHUNK_BIT))
 
 /*
  * This is a chunk header, which is mainly used for double-linked list
@@ -32,7 +34,7 @@ struct chunk_header {
     INTERNAL_SIZE_T prev_size;
     INTERNAL_SIZE_T size;
 
-    struct chunk_header* data;
+    void* data; // pointer to the actual data
     struct chunk_header* next_chunk;
 };
 
@@ -58,6 +60,9 @@ typedef struct chunk_header *chunk_ptr;
 // fetch the actual value of get_max_fast(excluding the first 3 bits)
 #define get_max_fast(ms) ((ms)->max_fast & ~LAST_2_BITS_SET)
 
+/*
+ * This struct contains all the necessary informations needed for the allocation for malloc
+ */
 struct malloc_state {
     chunk_ptr top; // this is the location which will be allocated memory(and given back to the user) if bins are empty
 
