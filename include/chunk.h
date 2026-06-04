@@ -6,7 +6,7 @@
 
 // Helper macros
 #define mem_2_chunk(mem) ((chunk_ptr)((BYTE_PTR)(mem) - 2 * SIZE_SZ))
-#define chunk_2_mem(mem) ((chunk_ptr)((BYTE_PTR)(mem) + 2 * SIZE_SZ))
+#define chunk_2_mem(mem) ((void *)((BYTE_PTR)(mem) + 2 * SIZE_SZ))
 /* size field is or'ed with PREV_INUSE when previous adjacent chunk in use */
 #define PREV_INUSE 0x1
 #define IS_MMAPPED 0x2

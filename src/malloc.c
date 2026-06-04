@@ -32,6 +32,13 @@ void *malloc(size_t size) {
   return get_mem_from_os(size);
 }
 
+void free(void *ptr) {
+  chunk_ptr cptr = mem_2_chunk(ptr);
+
+  printf("cptr size: %ld\n", chunksize(cptr));
+  //
+}
+
 static void init_malloc_state(mstate ms) {
   chunk_ptr bin;
   for (size_t i = 1; i < NBINS; i++) {
@@ -43,8 +50,6 @@ static void init_malloc_state(mstate ms) {
 }
 
 static void *use_top(mstate ms, size_t size) {
-  printf("running use_top\n");
-  struct chunk_header ch;
   void *mem;
   int new_size;
   if (chunksize(ms->top) < size) {
@@ -55,16 +60,19 @@ static void *use_top(mstate ms, size_t size) {
     new_size = ms->top->prev_size - size;
   }
 
-  ms->top->data = mem + size; // bumps up the pointer of top by size(since it's
-                              // being allocated to the program)
+  ms->top->data = (char *)mem + size +
+                  2 * SIZE_SZ; // bumps up the pointer of top by size(since
+                               // it's being allocated to the program)
   ms->top->size = new_size;
 
-  ch.size = size;
-  ch.prev_size = 0;
-  ch.data = mem;
-  ch.next_chunk = ms->top->data;
+  chunk_ptr ch = mem_2_chunk(mem + 2 * SIZE_SZ);
 
-  return ch.data;
+  ch->size = size;
+  ch->prev_size = 0;
+  ch->data = mem;
+  ch->next_chunk = ms->top->data;
+
+  return ch->data;
 }
 
 static void *get_mem_from_os(size_t size) {
