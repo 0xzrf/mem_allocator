@@ -39,16 +39,23 @@ struct chunk_header {
 
 typedef struct chunk_header *chunk_ptr;
 
-#define has_any_chunk(malloc_state) ((malloc_state)->has_chunk)
+#define ANYCHUNK_BIT (1U)
+#define has_any_chunk(ms) ((ms)->max_fast & ANYCHUNK_BIT)
+#define set_any_chunk(ms) ((ms)->max_fast |= ANYCHUNK_BIT)
+
+#define FASTCHUNK_BIT (2U)
+#define LAST_2_BITS_SET (ANYCHUNK_BIT | FASTCHUNK_BIT)
+#define have_fastchunk(ms) ((ms)->max_fast & FASTCHUNK_BIT)
+#define set_fastchunk(ms) ((ms)->max_fast |= LAST_2_BITS_SET)
+#define clear_fastchunk(ms) ((ms)->max_fast &= ~(FASTCHUNK_BIT))
 
 struct malloc_state {
     chunk_ptr top; // this is the location which will be allocated memory(and given back to the user) if bins are empty
-    bool has_chunk;
 
     INTERNAL_SIZE_T max_fast;
 
     chunk_ptr bins[NBINS];
-    chunk_ptr fast_bins[NFASTBINS]
+    chunk_ptr fast_bins[NFASTBINS];
 };
 
 typedef struct malloc_state *mstate;
