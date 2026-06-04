@@ -12,8 +12,8 @@ CRITERION_LIBS = -L$(HOMEBREW_PREFIX)/lib -lcriterion
 
 TEST_OUT = exec/test_exec
 TEST_SOURCES = $(wildcard tests/unit/*.c)
-BENCH_SOURCES = $(wildcard tests/bench/*.c)
 BENCH_OUT = exec/bench_exec
+BENCH_SOURCES = $(wildcard tests/bench/*.c)
 
 .PHONY: build build_and_run_ex test bench
 
@@ -30,10 +30,6 @@ test:
 	./$(TEST_OUT)
 
 bench:
-	@if [ -z "$(BENCH_SOURCES)" ]; then \
-		echo "No benchmarks in tests/bench/ yet."; \
-		exit 0; \
-	fi
 	mkdir -p exec
-	$(CC) $(CFLAGS) $(CRITERION_CFLAGS) -o $(BENCH_OUT) $(BENCH_SOURCES) $(CRITERION_LIBS)
+	$(CC) $(CFLAGS) $(CRITERION_CFLAGS) -o $(BENCH_OUT) $(BENCH_SOURCES) $(MODULES) $(CRITERION_LIBS)
 	./$(BENCH_OUT)

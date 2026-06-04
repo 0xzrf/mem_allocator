@@ -1,8 +1,8 @@
 #ifndef alloc_chunk_h
 #define alloc_chunk_h
 
-#include "common.h"
 #include "bins.h"
+#include "common.h"
 
 // Helper macros
 #define mem_2_chunk(mem) ((chunk_ptr)((BYTE_PTR)(mem) - 2 * SIZE_SZ))
@@ -16,7 +16,7 @@
 /* extract inuse bit of previous chunk */
 #define prev_inuse(p) ((p)->size & PREV_INUSE)
 
-#define prev_chunk(p) ((chunk_ptr)((BYTE_PTR)(p) - ((p)->prev_size) ))
+#define prev_chunk(p) ((chunk_ptr)((BYTE_PTR)(p) - ((p)->prev_size)))
 
 #define chunksize(p) ((p)->size & ~(SIZE_BITS))
 // set every bit and preserve the last flag bit
@@ -31,11 +31,11 @@
  * The `data` field is only used when the chunk is free
  */
 struct chunk_header {
-    INTERNAL_SIZE_T prev_size;
-    INTERNAL_SIZE_T size;
+  INTERNAL_SIZE_T prev_size;
+  INTERNAL_SIZE_T size;
 
-    void* data; // pointer to the actual data
-    struct chunk_header* next_chunk;
+  void *data; // pointer to the actual data
+  struct chunk_header *next_chunk;
 };
 
 typedef struct chunk_header *chunk_ptr;
@@ -54,23 +54,27 @@ typedef struct chunk_header *chunk_ptr;
 // opposite of set_fast_chunk
 #define clear_fastchunk(ms) ((ms)->max_fast &= ~(FASTCHUNK_BIT))
 
-// set every value, except the last 2 bits to the rounded off value of size(s) (using request_2_size)
-#define set_max_fast(ms, s) \
-    (ms)->max_fast = ((s) == 0) ? SMALLBIN_WIDTH : request_2_size(s) | ((ms)->max_fast & ~LAST_2_BITS_SET)
+// set every value, except the last 2 bits to the rounded off value of size(s)
+// (using request_2_size)
+#define set_max_fast(ms, s)                                                    \
+  (ms)->max_fast =                                                             \
+      ((s) == 0) ? SMALLBIN_WIDTH                                              \
+                 : request_2_size(s) | ((ms)->max_fast & ~LAST_2_BITS_SET)
 // fetch the actual value of get_max_fast(excluding the first 3 bits)
 #define get_max_fast(ms) ((ms)->max_fast & ~LAST_2_BITS_SET)
 
 /*
- * This struct contains all the necessary informations needed for the allocation for malloc
+ * This struct contains all the necessary informations needed for the allocation
+ * for malloc
  */
 struct malloc_state {
-    chunk_ptr top; // this is the location which will be allocated memory(and given back to the user) if bins are empty
+  chunk_ptr top; // this is the location which will be allocated memory(and
+                 // given back to the user) if bins are empty
 
-    INTERNAL_SIZE_T max_fast;
+  INTERNAL_SIZE_T max_fast;
 
-    chunk_ptr bins[NBINS];
-    chunk_ptr fast_bins[NFASTBINS];
-
+  chunk_ptr bins[NBINS];
+  chunk_ptr fast_bins[NFASTBINS];
 };
 
 typedef struct malloc_state *mstate;
