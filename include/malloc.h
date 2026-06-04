@@ -11,3 +11,4 @@
 #define get_malloc_state() (&(malloc_state))
 #define initial_top(ms) (unsorted_bin(ms))
 void *malloc(size_t);
+void free(void *);

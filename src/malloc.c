@@ -44,6 +44,7 @@ static void init_malloc_state(mstate ms) {
 
 static void *use_top(mstate ms, size_t size) {
   printf("running use_top\n");
+  struct chunk_header ch;
   void *mem;
   int new_size;
   if (chunksize(ms->top) < size) {
@@ -58,7 +59,12 @@ static void *use_top(mstate ms, size_t size) {
                               // being allocated to the program)
   ms->top->size = new_size;
 
-  return mem;
+  ch.size = size;
+  ch.prev_size = 0;
+  ch.data = mem;
+  ch.next_chunk = ms->top->data;
+
+  return ch.data;
 }
 
 static void *get_mem_from_os(size_t size) {
