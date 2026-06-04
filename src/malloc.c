@@ -30,7 +30,7 @@ void init_malloc_state() {
     chunk_ptr bin;
     for (size_t i = 0; i < NBINS; i++) {
         bin = bin_at(i);
-        bin->data = bin; // TODO: We might later add the `bk` field, which will need to be initialized to bin here
+        bin->data = bin->next_chunk = bin; // bin == bin.data == bin.next_chunk is how we know that a bin is empty
     }
 
     malloc_state->top->size = 0;

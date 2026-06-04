@@ -70,6 +70,7 @@ struct malloc_state {
 
     chunk_ptr bins[NBINS];
     chunk_ptr fast_bins[NFASTBINS];
+
 };
 
 typedef struct malloc_state *mstate;

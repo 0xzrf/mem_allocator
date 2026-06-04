@@ -14,3 +14,4 @@
 
 #define smallbin_index(sz)     (((unsigned)(sz)) >> 3)
 #define fastbin_index(sz)      (((sz) >> 3) - 2)
+#define is_bin_empty(bin)      ((bin) == bin->data && bin == bin->next_chunk)
