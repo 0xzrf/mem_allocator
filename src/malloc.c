@@ -1,6 +1,10 @@
 #include "../include/malloc.h"
+#include <string.h>
 
 static mstate malloc_state;
+
+/* dlmalloc-style empty-bin sentinels: each bin list head lives here */
+static struct chunk_header bin_heads[NBINS];
 
 static void init_malloc_state(void);
 static void *use_top(size_t size);
@@ -22,6 +26,7 @@ void *malloc(size_t size) {
 
   if (malloc_state == NULL) {
     static struct malloc_state m;
+    memset(&m, 0, sizeof(m));
     malloc_state = &m;
   }
 
@@ -38,18 +43,28 @@ void *malloc(size_t size) {
 
 static void init_malloc_state(void) {
   chunk_ptr bin;
+  void *arena;
+
   for (size_t i = 0; i < NBINS; i++) {
+    /* point bin slot at its sentinel header, then circular empty list */
+    malloc_state->bins[i] = &bin_heads[i];
     bin = bin_at(i);
-    bin->data = bin->next_chunk = bin; // bin == bin.data == bin.next_chunk is
-                                       // how we know that a bin is empty
+    bin->prev_size = 0;
+    bin->size = 0;
+    bin->data = bin;
+    bin->next_chunk = bin; // bin == bin.data == bin.next_chunk => empty bin
   }
 
-  malloc_state->top->size = 0;
-  malloc_state->top->data = malloc_state->top->next_chunk = NULL;
+  /* wilderness (top) chunk: one mmap'd arena with header at the base */
+  arena = get_mem_from_os(SYS_ALLOC_PAGE_SIZE);
+  malloc_state->top = (chunk_ptr)arena;
+  malloc_state->top->prev_size = 0;
+  malloc_state->top->size = SYS_ALLOC_PAGE_SIZE - MIN_CHUNK_SIZE;
+  malloc_state->top->data = (void *)((BYTE_PTR)arena + MIN_CHUNK_SIZE);
+  malloc_state->top->next_chunk = NULL;
 }
 
 static void *use_top(size_t size) {
-  printf("running use_top\n");
   void *mem = NULL;
   int new_size;
   if (chunksize(malloc_state->top) < size) {
@@ -57,7 +72,7 @@ static void *use_top(size_t size) {
     new_size = SYS_ALLOC_PAGE_SIZE;
   } else {
     mem = malloc_state->top->data;
-    new_size = malloc_state->top->prev_size - size;
+    new_size = (int)(chunksize(malloc_state->top) - size);
   }
 
   malloc_state->top->data =
