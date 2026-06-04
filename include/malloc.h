@@ -10,5 +10,5 @@
 void *malloc(size_t);
 
 static void init_malloc_state();
-static void *use_top();
+static void *use_top(size_t);
 static void *get_mem_from_os(size_t);

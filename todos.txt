@@ -1,0 +1,5 @@
+Things yet to understand(for perf)
+1. Binmap
+2. unsorted chunks
+3. malloc_state
+4. Bins

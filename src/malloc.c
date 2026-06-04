@@ -16,10 +16,10 @@ void *malloc(size_t size) {
      * when the program frees the memory allocated by this malloc
      */
     if (!has_any_chunk(malloc_state)) {
-        if(malloc_state->max_fast == 0) {
+        if (malloc_state->max_fast == 0) {
             init_malloc_state();
         }
-        return use_top();
+        return use_top(size);
     }
 
     return get_mem_from_os(size);
@@ -34,6 +34,12 @@ void init_malloc_state() {
 
     malloc_state->top->size = 0;
     malloc_state->top->data = NULL;
+}
+
+void *use_top(size_t size) {
+    if (chunksize(malloc_state->top) < size) {
+
+    }
 }
 
 void *get_mem_from_os(size_t size) {

@@ -10,10 +10,16 @@
 #define chunk_2_mem(mem) ((chunk_ptr)((BYTE_PTR)(mem) + 2 * SIZE_SZ))
 /* size field is or'ed with PREV_INUSE when previous adjacent chunk in use */
 #define PREV_INUSE 0x1
+#define IS_MMAPPED 0x2
+
+#define SIZE_BITS (PREV_INUSE | IS_MMAPPED)
+
 /* extract inuse bit of previous chunk */
 #define prev_inuse(p) ((p)->size & PREV_INUSE)
 
 #define prev_chunk(p) ((chunk_ptr)((BYTE_PTR)(p) - ((p)->prev_size) ))
+
+#define chunksize(p) ((p)->size & ~(SIZE_BITS))
 
 /*
  * This is a chunk header, which is mainly used for double-linked list
@@ -42,6 +48,7 @@ struct malloc_state {
     INTERNAL_SIZE_T max_fast;
 
     chunk_ptr bins[NBINS];
+    chunk_ptr fast_bins[NFASTBINS]
 };
 
 typedef struct malloc_state *mstate;

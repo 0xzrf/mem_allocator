@@ -61,3 +61,13 @@ There are 4 categories of bins
 
 ### Binmap
 An optimization technique to skip over empty bins(will edit more based on what I learn)
+
+## Malloc flow:
+1. Normalize the request → chunk size nb (the request2size math above).
+2. Fastbin hit? If the size is small enough and that fastbin has a chunk, pop it off the front and return. O(1). This is the hot path for small short-lived allocations.
+3. Exact smallbin hit? If small and that smallbin is non-empty, take the last chunk — it's guaranteed an exact fit. O(1).
+4. (Large request) consolidate fastbins first. Before doing heavy work for a big request, dump all the pinned fastbin chunks back into the real free pool (they might merge into something big enough). Avoids fragmentation.
+5. Process the unsorted bin(put there right after free). Walk the unsorted chunks; either grab one that fits, or file each into its proper small/large bin as you pass.
+6. Search largebins by best-fit, using the binmap to skip empty bins, walking up to bigger and bigger bins until something fits.
+7. Carve from top. If a bin chunk was bigger than needed, split it: return the front, put the remainder back (in the unsorted bin). If nothing in any bin worked, slice off the top chunk.
+8. Ask the OS (mmap) if even top is too small.
