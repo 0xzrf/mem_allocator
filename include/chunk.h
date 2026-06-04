@@ -3,7 +3,6 @@
 
 #include "common.h"
 #include "bins.h"
-#include <stdbool.h>
 
 // Helper macros
 #define mem_2_chunk(mem) ((chunk_ptr)((BYTE_PTR)(mem) - 2 * SIZE_SZ))
@@ -40,17 +39,23 @@ struct chunk_header {
 typedef struct chunk_header *chunk_ptr;
 
 #define ANYCHUNK_BIT (1U)
+// fetch and set the last bit of malloc_state->max_fast
 #define has_any_chunk(ms) ((ms)->max_fast & ANYCHUNK_BIT)
 #define set_any_chunk(ms) ((ms)->max_fast |= ANYCHUNK_BIT)
 
 #define FASTCHUNK_BIT (2U)
 #define LAST_2_BITS_SET (ANYCHUNK_BIT | FASTCHUNK_BIT)
+// fetch the 2nd last bit of malloc_state->max_fast
 #define have_fastchunk(ms) ((ms)->max_fast & FASTCHUNK_BIT)
+// sets the last 2 bits of malloc_state->max_fast to 1
 #define set_fastchunk(ms) ((ms)->max_fast |= LAST_2_BITS_SET)
+// opposite of set_fast_chunk
 #define clear_fastchunk(ms) ((ms)->max_fast &= ~(FASTCHUNK_BIT))
 
+// set every value, except the last 2 bits to the rounded off value of size(s) (using request_2_size)
 #define set_max_fast(ms, s) \
     (ms)->max_fast = ((s) == 0) ? SMALLBIN_WIDTH : request_2_size(s) | ((ms)->max_fast & ~LAST_2_BITS_SET)
+// fetch the actual value of get_max_fast(excluding the first 3 bits)
 #define get_max_fast(ms) ((ms)->max_fast & ~LAST_2_BITS_SET)
 
 struct malloc_state {
