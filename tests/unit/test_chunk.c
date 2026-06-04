@@ -1,15 +1,8 @@
 #include "../include/test_chunk.h"
 
-void setUp() {}
-void tearDown() {}
+Test(chunk, prev_inuse_bit) {
+  struct chunk_header x;
 
-void test_chunk_helpers() {
-    struct chunk_header x;
-
-    x.size = 1U; // first bit set
-    TEST_ASSERT_EQUAL(prev_inuse(&x), 1);
-}
-
-void run_chunk_tests() {
-    RUN_TEST(test_chunk_helpers);
+  x.size = 1U;
+  cr_assert_eq(prev_inuse(&x), 1);
 }

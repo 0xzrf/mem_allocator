@@ -3,6 +3,20 @@ OUT = exec/exec
 CC = gcc
 CFLAGS = -O2 -Iinclude -Wall -Wextra -Werror
 
+HOMEBREW_PREFIX := $(shell brew --prefix 2>/dev/null)
+ifeq ($(HOMEBREW_PREFIX),)
+$(error Install Criterion: brew install criterion)
+endif
+CRITERION_CFLAGS = -I$(HOMEBREW_PREFIX)/include
+CRITERION_LIBS = -L$(HOMEBREW_PREFIX)/lib -lcriterion
+
+TEST_OUT = exec/test_exec
+TEST_SOURCES = $(wildcard tests/unit/*.c)
+BENCH_SOURCES = $(wildcard tests/bench/*.c)
+BENCH_OUT = exec/bench_exec
+
+.PHONY: build build_and_run_ex test bench
+
 build:
 	mkdir -p exec
 	$(CC) $(CFLAGS) -o $(OUT) examples/normal_allocation.c $(MODULES)
@@ -10,8 +24,19 @@ build:
 build_and_run_ex: build
 	./$(OUT)
 
-TEST_OUT = exec/test_exec
-TEST_MODULES = tests/unit/test_chunk.c tests/test_runner/run_tests.c tests/unity/unity.c
-
 test:
-	$(CC) $(CFLAGS) -o $(TEST_OUT) $(TEST_MODULES) && ./$(TEST_OUT)
+	mkdir -p exec
+	$(CC) $(CFLAGS) $(CRITERION_CFLAGS) -o $(TEST_OUT) $(TEST_SOURCES) $(CRITERION_LIBS)
+	./$(TEST_OUT)
+
+bench:
+	@if [ -z "$(BENCH_SOURCES)" ]; then \
+		echo "No benchmarks in tests/bench/ yet."; \
+		exit 0; \
+	fi
+	mkdir -p exec
+	$(CC) $(CFLAGS) $(CRITERION_CFLAGS) -o $(BENCH_OUT) $(BENCH_SOURCES) $(CRITERION_LIBS)
+	./$(BENCH_OUT)
+
+
+
