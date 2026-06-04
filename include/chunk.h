@@ -49,6 +49,10 @@ typedef struct chunk_header *chunk_ptr;
 #define set_fastchunk(ms) ((ms)->max_fast |= LAST_2_BITS_SET)
 #define clear_fastchunk(ms) ((ms)->max_fast &= ~(FASTCHUNK_BIT))
 
+#define set_max_fast(ms, s) \
+    (ms)->max_fast = ((s) == 0) ? SMALLBIN_WIDTH : request_2_size(s) | ((ms)->max_fast & ~LAST_2_BITS_SET)
+#define get_max_fast(ms) ((ms)->max_fast & ~LAST_2_BITS_SET)
+
 struct malloc_state {
     chunk_ptr top; // this is the location which will be allocated memory(and given back to the user) if bins are empty
 
