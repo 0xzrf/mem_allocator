@@ -1,5 +1,3 @@
-# UNDER DEVELOPMENT, AND README's DESIGN IS SUBJECT TO CHANGES
-
 ## Inspiration
 This Memory allocator is inspired by Doug lea's memory allocator.
 
