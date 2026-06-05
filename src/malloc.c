@@ -69,6 +69,17 @@ void free(void *ptr) {
       cptr = chunk_at_offset(cptr, -((long)prevsize));
       unlink(cptr, new_size, next_chunk);
     }
+
+    if (cptr->next_chunk != ms->top) {
+      size_t nextinuse = inuse_bit_at_offset(next_chunk, next_size);
+      set_head(next_chunk, next_size);
+
+      if (!nextinuse) {
+        size_t new_size = cptr->size + next_size;
+        chunk_ptr new_next_chunk = next_chunk->next_chunk;
+        unlink(cptr, new_size, new_next_chunk);
+      }
+    }
     // STEP 2: Check for forward coalescing
   }
 }

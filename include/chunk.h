@@ -26,11 +26,20 @@
 #define set_chunksize(p, s) ((p)->size = s | ((p)->size & ~ANYCHUNK_BIT))
 #define chunk_at_offset(p, s) ((chunk_ptr)(((char *)(p)) + (s)))
 
-#define unlink(p, new_size, next_chunk)                                        \
+#define unlink(p, new_size, new_next_chunk)                                    \
   do {                                                                         \
     p->size = new_size;                                                        \
-    p->next_chunk = next_chunk;                                                \
+    p->next_chunk = new_next_chunk;                                            \
   } while (0)
+
+#define inuse_bit_at_offset(p, s)                                              \
+  (((chunk_ptr)(((char *)(p)) + (s)))->size & PREV_INUSE)
+
+/* Set size/use field */
+#define set_head(p, s) ((p)->size = (s))
+
+/* Set size at footer (only when chunk is not in use) */
+#define set_foot(p, s) (((chunk_ptr)((char *)(p) + (s)))->prev_size = (s))
 
 /*
  * This is a chunk header, which is mainly used for double-linked list
