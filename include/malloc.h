@@ -1,10 +1,10 @@
 #include "chunk.h"
 #include "common.h"
+#include "debug.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
-
 #define bin_at(m, i)                                                           \
   ((chunk_ptr)((char *)&((m)->bins[(i) << 1]) - (SIZE_SZ << 1)))
 

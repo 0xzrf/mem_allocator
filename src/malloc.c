@@ -10,6 +10,7 @@ void *malloc(size_t size) {
   printf("Allocating memory\n");
 
   size_t normalized_size = request_2_size(size);
+  PRINT_LD_2(size, normalized_size);
 
   mstate ms = get_malloc_state();
   /*
@@ -65,11 +66,12 @@ static void *use_top(mstate ms, size_t size) {
                                // it's being allocated to the program)
   ms->top->size = new_size;
 
-  chunk_ptr ch = mem_2_chunk(mem + 2 * SIZE_SZ);
+  void *user_data = mem + 2 * SIZE_SZ;
+  chunk_ptr ch = mem_2_chunk(user_data);
 
   ch->size = size;
   ch->prev_size = 0;
-  ch->data = mem;
+  ch->data = user_data;
   ch->next_chunk = ms->top->data;
 
   return ch->data;

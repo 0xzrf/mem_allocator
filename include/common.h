@@ -13,6 +13,6 @@
 #define SYS_ALLOC_PAGE_SIZE 4096
 
 #define request_2_size(req)                                                    \
-  ((req) + SIZE_SZ + MALLOC_ALIGN_MASK > MIN_REQ_SIZE)                         \
-      ? MIN_REQ_SIZE                                                           \
-      : ((req) + SIZE_SZ + MALLOC_ALIGN_MASK) & ~MALLOC_ALIGN_MASK
+  (((req) + SIZE_SZ + MALLOC_ALIGN_MASK < MIN_REQ_SIZE)                        \
+       ? MIN_REQ_SIZE                                                          \
+       : ((req) + SIZE_SZ + MALLOC_ALIGN_MASK) & ~MALLOC_ALIGN_MASK)
