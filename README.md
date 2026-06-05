@@ -7,7 +7,7 @@ Why did I choose this? Well, it's pretty simple, and gets you going with memory 
 it has a simple tags for free/inuse memory, and reasonable algorithm to allocate memory, prioritizing locality
 and small sized allocations.
 
-The design and flow is inspired by the following repo: https://github.com/ennorehling/dlmalloc/blob/master/malloc.c
+The design and flow is inspired by the following repo: https://github.com/ennorehling/dlmalloc
 I'm just trying to implement it on my own to understand different kinds of memory allocators implementations
 
 ## Design

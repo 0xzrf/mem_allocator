@@ -47,12 +47,29 @@ void free(void *ptr) {
       chunk_ptr *head = &(ms->fast_bins[fastbin_index(size)]);
       cptr->next_chunk = *head;
       head = &cptr;
+      return;
     }
     // Check if the memory being freed is was allocated from OS
     if (is_mmapd(cptr)) {
       return_mem_to_os(cptr, size + 2 * SIZE_SZ);
+      return;
     }
-    // coalece and put to unsorted list
+    // coalesce and put to unsorted list since this is a value of size >
+    // max_fast && < MMAP_TAG_THRESHOLD
+    set_any_chunk(ms);
+
+    chunk_ptr next_chunk = chunk_at_offset(cptr, size);
+    size_t next_size = chunksize(next_chunk);
+
+    // STEP 1: Check for coalescing possibility from prev chunk
+    if (!prev_inuse(cptr)) {
+      size_t prevsize = cptr->prev_size;
+      size_t new_size = prevsize;
+      chunk_ptr next_chunk = cptr->next_chunk;
+      cptr = chunk_at_offset(cptr, -((long)prevsize));
+      unlink(cptr, new_size, next_chunk);
+    }
+    // STEP 2: Check for forward coalescing
   }
 }
 
@@ -63,6 +80,8 @@ static void init_malloc_state(mstate ms) {
     bin->data = bin->next_chunk = bin; // bin == bin.data == bin.next_chunk is
                                        // how we know that a bin is empty
   }
+
+  ms->max_fast = DEFAULT_MAX_FASTBIN_SIZE;
   ms->top = initial_top(ms);
 }
 

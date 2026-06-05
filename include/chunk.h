@@ -24,6 +24,13 @@
 #define chunksize(p) ((p)->size & ~(SIZE_BITS))
 // set every bit and preserve the last flag bit
 #define set_chunksize(p, s) ((p)->size = s | ((p)->size & ~ANYCHUNK_BIT))
+#define chunk_at_offset(p, s) ((chunk_ptr)(((char *)(p)) + (s)))
+
+#define unlink(p, new_size, next_chunk)                                        \
+  do {                                                                         \
+    p->size = new_size;                                                        \
+    p->next_chunk = next_chunk;                                                \
+  } while (0)
 
 /*
  * This is a chunk header, which is mainly used for double-linked list
