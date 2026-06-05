@@ -46,6 +46,7 @@ void free(void *ptr) {
     }
     // Check if the memory being freed is was allocated from OS
     if (is_mmapd(cptr)) {
+      return_mem_to_os(cptr, size + 2 * SIZE_SZ);
     }
     // coelece and put to unsorted list
   }
