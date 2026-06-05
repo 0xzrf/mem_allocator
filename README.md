@@ -33,7 +33,7 @@ In memory, it looks something like this(if in-use by program):
 chunk ptr ->  +----------------------------+
               | prev_size (or prev's data) |   <- 4 bytes
               +----------------------------+
-              | size                 |A|M|P|   <- 4 bytes, low 3 bits = flags
+              | size                 |A|M|P|   <- 4 bytes, low 3 bits = flags, P=InUse, M=Is mmaped
    mem ptr -> +----------------------------+   <- THIS is what malloc returns to you
               |                            |
               |   your usable data         |
@@ -64,10 +64,20 @@ An optimization technique to skip over empty bins(will edit more based on what I
 
 ## Malloc flow:
 1. Normalize the request → chunk size nb (the request2size math above).
-2. Fastbin hit? If the size is small enough and that fastbin has a chunk, pop it off the front and return. O(1). This is the hot path for small short-lived allocations.
-3. Exact smallbin hit? If small and that smallbin is non-empty, take the last chunk — it's guaranteed an exact fit. O(1).
+2. Fastbin hit? If the size is small enough and that fastbin has a chunk, pop it off the front and return. `O(1)`. This is the hot path for small short-lived allocations.
+3. Exact smallbin hit? If small and that smallbin is non-empty, take the last chunk — it's guaranteed an exact fit. `O(1)`.
 4. (Large request) consolidate fastbins first. Before doing heavy work for a big request, dump all the pinned fastbin chunks back into the real free pool (they might merge into something big enough). Avoids fragmentation.
 5. Process the unsorted bin(put there right after free). Walk the unsorted chunks; either grab one that fits, or file each into its proper small/large bin as you pass.
 6. Search largebins by best-fit, using the binmap to skip empty bins, walking up to bigger and bigger bins until something fits.
 7. Carve from top. If a bin chunk was bigger than needed, split it: return the front, put the remainder back (in the unsorted bin). If nothing in any bin worked, slice off the top chunk.
 8. Ask the OS (mmap) if even top is too small.
+
+## Free flow:
+1. `free_size <= malloc_state->max_fast`? push it to the fastbin list
+2. if not, then check for the `IS_MMAPD` bit in the chunk, if it is, then return it back to the OS
+3. Else, start coelescing that chunk with other neibouring chunks(forward and backword)
+4. Push it to the `malloc_state->unsorted_list` (always)
+
+It might come as a surprise here that Free doesn't put back the chunk to the bin of appropriate size.
+this memory allocator lazily puts the chunks back to the bins after putting it in `malloc_state->unsorted_list`, giving it one last chance
+to be directly allocated before being set to bin again

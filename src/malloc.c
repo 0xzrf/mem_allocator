@@ -34,9 +34,19 @@ void *malloc(size_t size) {
 
 void free(void *ptr) {
   chunk_ptr cptr = mem_2_chunk(ptr);
+  mstate ms = get_malloc_state();
+  INTERNAL_SIZE_T size = chunksize(cptr);
 
-  printf("cptr size: %ld\n", chunksize(cptr));
-  //
+  // free is a no-op when size == 0
+  if (size != 0) {
+    // Check if the size is <= ms->max_fast. if true, push it to
+    // fastbins
+    if (size <= ms->max_fast) {
+    }
+    // Check if the memory being freed is was allocated from OS
+
+    // push the value to bins
+  }
 }
 
 static void init_malloc_state(mstate ms) {
