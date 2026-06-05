@@ -43,12 +43,16 @@ void free(void *ptr) {
     // Check if the size is <= ms->max_fast. if true, push it to
     // fastbins
     if (size <= ms->max_fast) {
+      set_fastchunk(ms);
+      chunk_ptr *head = &(ms->fast_bins[fastbin_index(size)]);
+      cptr->next_chunk = *head;
+      head = &cptr;
     }
     // Check if the memory being freed is was allocated from OS
     if (is_mmapd(cptr)) {
       return_mem_to_os(cptr, size + 2 * SIZE_SZ);
     }
-    // coelece and put to unsorted list
+    // coalece and put to unsorted list
   }
 }
 

@@ -13,6 +13,6 @@
   ((CHUNK_SIZE_T)(sz) < (CHUNK_SIZE_T)MIN_LARGE_SIZE)
 
 #define smallbin_index(sz) (((unsigned)(sz)) >> 3)
-#define fastbin_index(sz) (((sz) >> 3) - 2)
+#define fastbin_index(sz) ((((unsigned int)(sz)) >> 3) - 2)
 #define is_bin_empty(bin) ((bin) == bin->data && bin == bin->next_chunk)
 #define unsorted_bin(ms) (bin_at(ms, 1))

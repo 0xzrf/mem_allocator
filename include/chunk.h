@@ -77,6 +77,7 @@ struct malloc_state {
   INTERNAL_SIZE_T max_fast;
 
   chunk_ptr bins[NBINS];
+
   chunk_ptr fast_bins[NFASTBINS];
 };
 
