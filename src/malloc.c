@@ -6,6 +6,11 @@ static void init_malloc_state(mstate);
 static void *use_top(mstate, size_t size);
 static void *get_mem_from_os(size_t size);
 static void return_mem_to_os(void *, size_t);
+static void link_unsorted(mstate ms, chunk_ptr c);
+static void *finish_allocation(mstate ms, chunk_ptr c, size_t nb, size_t cs);
+static void rebin_chunk(mstate ms, chunk_ptr c, size_t cs);
+static void *malloc_smallbins(mstate ms, size_t nb);
+static void *malloc_unsorted(mstate ms, size_t nb);
 
 void *malloc(size_t size) {
   printf("Allocating memory\n");
@@ -24,11 +29,12 @@ void *malloc(size_t size) {
 
   if (has_fastchunk(ms) &&
       (CHUNK_SIZE_T)normalized_size <= (CHUNK_SIZE_T)ms->max_fast) {
-    chunk_ptr fastbin_head = ms->fast_bins[fastbin_index(normalized_size)];
-    if (!is_bin_empty(fastbin_head)) {
-      chunk_ptr mem_to_return = fastbin_head;
-      fastbin_head = fastbin_head->next_chunk;
-      return mem_to_return->data;
+    size_t fb = fastbin_index(normalized_size);
+    chunk_ptr head = ms->fast_bins[fb];
+    if (head != NULL) {
+      ms->fast_bins[fb] = head->next_chunk;
+      head->size |= PREV_INUSE;
+      return chunk_2_mem(head);
     }
   }
 
@@ -39,7 +45,23 @@ void *malloc(size_t size) {
     return use_top(ms, normalized_size);
   }
 
-  return NULL;
+  if (has_any_chunk(ms) &&
+      (CHUNK_SIZE_T)normalized_size > (CHUNK_SIZE_T)ms->max_fast &&
+      (CHUNK_SIZE_T)normalized_size <= (CHUNK_SIZE_T)MIN_LARGE_SIZE) {
+    void *mem = malloc_smallbins(ms, normalized_size);
+    if (mem != NULL) {
+      return mem;
+    }
+  }
+
+  if (!is_bin_empty(unsorted_bin(ms))) {
+    void *mem = malloc_unsorted(ms, normalized_size);
+    if (mem != NULL) {
+      return mem;
+    }
+  }
+
+  return use_top(ms, normalized_size);
 }
 
 void free(void *ptr) {
@@ -92,9 +114,7 @@ void free(void *ptr) {
     }
 
     // STEP 3: Put the new cptr to the unsorted list
-    chunk_ptr unsorted_lt_head = unsorted_bin(ms);
-    cptr->next_chunk = unsorted_lt_head;
-    unsorted_lt_head = cptr;
+    link_unsorted(ms, cptr);
 
     return;
   }
@@ -169,4 +189,112 @@ static void return_mem_to_os(void *p, size_t size) {
     printf("Couldn't return the memory back to OS");
     exit(1);
   }
+}
+
+static void link_unsorted(mstate ms, chunk_ptr c) {
+  chunk_ptr b = unsorted_bin(ms);
+
+  (void)ms;
+  c->next_chunk = b->data;
+  b->data = c;
+  if (c->next_chunk == b) {
+    b->next_chunk = c;
+  }
+}
+
+static void link_smallbin(mstate ms, chunk_ptr c, size_t cs) {
+  size_t idx = smallbin_index(cs);
+  chunk_ptr b = bin_at(ms, idx);
+
+  c->next_chunk = b->data;
+  b->data = c;
+  if (c->next_chunk == b) {
+    b->next_chunk = c;
+  }
+}
+
+static void rebin_chunk(mstate ms, chunk_ptr c, size_t cs) {
+  if (cs <= ms->max_fast) {
+    size_t idx = fastbin_index(cs);
+    set_fastchunk(ms);
+    c->next_chunk = ms->fast_bins[idx];
+    ms->fast_bins[idx] = c;
+  } else if (in_smallbin_range(cs)) {
+    link_smallbin(ms, c, cs);
+  } else {
+    link_unsorted(ms, c);
+  }
+}
+
+static void *finish_allocation(mstate ms, chunk_ptr c, size_t nb, size_t cs) {
+  chunk_ptr next;
+  size_t used = nb;
+
+  if (cs > nb + MIN_CHUNK_SIZE) {
+    set_head(c, nb | PREV_INUSE | (c->size & IS_MMAPED));
+    chunk_ptr rem = chunk_at_offset(c, nb);
+    set_head(rem, cs - nb);
+    set_foot(rem, cs - nb);
+    next = chunk_at_offset(rem, cs - nb);
+    if (next != ms->top) {
+      next->size |= PREV_INUSE;
+    }
+    link_unsorted(ms, rem);
+  } else {
+    set_head(c, cs | PREV_INUSE | (c->size & IS_MMAPED));
+    used = cs;
+  }
+
+  next = chunk_at_offset(c, used);
+  if (next != ms->top) {
+    next->size |= PREV_INUSE;
+  }
+
+  return chunk_2_mem(c);
+}
+
+static void *malloc_smallbins(mstate ms, size_t nb) {
+  size_t start = smallbin_index(nb);
+
+  for (size_t i = start; i < NSMALLBINS; i++) {
+    chunk_ptr b = bin_at(ms, i);
+    chunk_ptr c;
+
+    if (is_bin_empty(b)) {
+      continue;
+    }
+
+    c = b->data;
+    b->data = c->next_chunk;
+    if (b->data == b) {
+      b->next_chunk = b;
+    }
+
+    return finish_allocation(ms, c, nb, chunksize(c));
+  }
+
+  return NULL;
+}
+
+static void *malloc_unsorted(mstate ms, size_t nb) {
+  chunk_ptr b = unsorted_bin(ms);
+  chunk_ptr c;
+
+  while (!is_bin_empty(b)) {
+    c = b->data;
+    size_t cs = chunksize(c);
+
+    b->data = c->next_chunk;
+    if (b->data == b) {
+      b->next_chunk = b;
+    }
+
+    if (cs >= nb) {
+      return finish_allocation(ms, c, nb, cs);
+    }
+
+    rebin_chunk(ms, c, cs);
+  }
+
+  return NULL;
 }
