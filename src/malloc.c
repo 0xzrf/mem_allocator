@@ -54,18 +54,26 @@ static void *use_top(mstate ms, size_t size) {
   int new_size;
   if (chunksize(ms->top) < size) {
     mem = get_mem_from_os(SYS_ALLOC_PAGE_SIZE);
-    new_size = SYS_ALLOC_PAGE_SIZE;
+    new_size = SYS_ALLOC_PAGE_SIZE - size;
   } else {
     mem = ms->top->data;
     new_size = ms->top->prev_size - size;
   }
 
-  ms->top->data = (char *)mem + size +
-                  2 * SIZE_SZ; // bumps up the pointer of top by size(since
-                               // it's being allocated to the program)
+  /*
+  Since we're cutting off the front of the memory allocated from mmap
+  We need to also make sure that we're storing it in a chunk and returning it to
+  the user since when they return this ptr, we need to know it's size
+  */
+
+  // bump up the mem to reserve some space for the header
+  void *user_data = (char *)mem + 2 * SIZE_SZ;
+
+  ms->top->data =
+      (char *)user_data + size; // bumps up the pointer of top by size(since
+                                // it's being allocated to the program)
   ms->top->size = new_size;
 
-  void *user_data = mem + 2 * SIZE_SZ;
   chunk_ptr ch = mem_2_chunk(user_data);
 
   ch->size = size;
