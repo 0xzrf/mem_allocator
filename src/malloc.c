@@ -87,6 +87,9 @@ static void *use_top(mstate ms, size_t size) {
   chunk_ptr ch = mem_2_chunk(user_data);
 
   ch->size = size;
+  set_mmapd(ch); // sets the second last bit to be 1, specifying that this chunk
+                 // is mmap allocated, and should be returned back to the OS
+
   ch->prev_size = 0;
   ch->data = user_data;
   ch->next_chunk = ms->top->data;
