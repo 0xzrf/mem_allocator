@@ -67,7 +67,7 @@ typedef struct chunk_header *chunk_ptr;
 #define FASTCHUNK_BIT (2U)
 #define LAST_2_BITS_SET (ANYCHUNK_BIT | FASTCHUNK_BIT)
 // fetch the 2nd last bit of malloc_state->max_fast
-#define have_fastchunk(ms) ((ms)->max_fast & FASTCHUNK_BIT)
+#define has_fastchunk(ms) ((ms)->max_fast & FASTCHUNK_BIT)
 // sets the last 2 bits of malloc_state->max_fast to 1
 #define set_fastchunk(ms) ((ms)->max_fast |= LAST_2_BITS_SET)
 // opposite of set_fast_chunk

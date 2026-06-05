@@ -22,6 +22,16 @@ void *malloc(size_t size) {
    * bins when the program frees the memory allocated by this malloc
    */
 
+  if (has_fastchunk(ms) &&
+      (CHUNK_SIZE_T)normalized_size <= (CHUNK_SIZE_T)ms->max_fast) {
+    chunk_ptr fastbin_head = ms->fast_bins[fastbin_index(normalized_size)];
+    if (!is_bin_empty(fastbin_head)) {
+      chunk_ptr mem_to_return = fastbin_head;
+      fastbin_head = fastbin_head->next_chunk;
+      return mem_to_return->data;
+    }
+  }
+
   if (!has_any_chunk(ms)) {
     if (ms->max_fast == 0) {
       init_malloc_state(ms);
@@ -29,8 +39,7 @@ void *malloc(size_t size) {
     return use_top(ms, normalized_size);
   }
 
-  // TODO: Get mem from bins
-  return get_mem_from_os(size);
+  return NULL;
 }
 
 void free(void *ptr) {
