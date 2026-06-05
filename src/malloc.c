@@ -5,6 +5,7 @@ static struct malloc_state malloc_state;
 static void init_malloc_state(mstate);
 static void *use_top(mstate, size_t size);
 static void *get_mem_from_os(size_t size);
+static void return_mem_to_os(void *, size_t);
 
 void *malloc(size_t size) {
   printf("Allocating memory\n");
@@ -44,8 +45,9 @@ void free(void *ptr) {
     if (size <= ms->max_fast) {
     }
     // Check if the memory being freed is was allocated from OS
-
-    // push the value to bins
+    if (is_mmapd(cptr)) {
+    }
+    // coelece and put to unsorted list
   }
 }
 
@@ -109,4 +111,11 @@ static void *get_mem_from_os(size_t size) {
     exit(1);
   }
   return mem;
+}
+
+static void return_mem_to_os(void *p, size_t size) {
+  if (munmap(p, size) == -1) {
+    printf("Couldn't return the memory back to OS");
+    exit(1);
+  }
 }
