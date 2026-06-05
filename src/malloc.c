@@ -70,6 +70,7 @@ void free(void *ptr) {
       unlink(cptr, new_size, next_chunk);
     }
 
+    // STEP 2: Check for forward coalescing
     if (cptr->next_chunk != ms->top) {
       size_t nextinuse = inuse_bit_at_offset(next_chunk, next_size);
       set_head(next_chunk, next_size);
@@ -80,7 +81,13 @@ void free(void *ptr) {
         unlink(cptr, new_size, new_next_chunk);
       }
     }
-    // STEP 2: Check for forward coalescing
+
+    // STEP 3: Put the new cptr to the unsorted list
+    chunk_ptr unsorted_lt_head = unsorted_bin(ms);
+    cptr->next_chunk = unsorted_lt_head;
+    unsorted_lt_head = cptr;
+
+    return;
   }
 }
 
