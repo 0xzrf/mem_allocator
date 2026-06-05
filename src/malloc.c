@@ -10,7 +10,6 @@ void *malloc(size_t size) {
   printf("Allocating memory\n");
 
   size_t normalized_size = request_2_size(size);
-  PRINT_LD_2(size, normalized_size);
 
   mstate ms = get_malloc_state();
   /*
