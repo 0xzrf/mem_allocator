@@ -1,11 +1,9 @@
 #include "../include/malloc.h"
 
-#define PAGE 4096 / 2
+#define KB 1024
 
 int main() {
-  void *p = malloc(PAGE); // allocate ~ 1 page
-  printf("Allocated memory: %p\n", p);
-
-  free(p);
-  return 0;
+  for (int i = 0; i < 4; i++) {
+    dl_free(dl_malloc(KB - (i * 256)));
+  }
 }

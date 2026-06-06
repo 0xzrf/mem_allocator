@@ -15,6 +15,11 @@ static void *malloc_unsorted(mstate ms, size_t nb);
 void *dl_malloc(size_t size) {
   printf("Allocating memory\n");
 
+  if (size == 0) {
+    OUT_ERR("dl_malloc called with size 0");
+    return NULL;
+  }
+
   size_t normalized_size = request_2_size(size);
 
   mstate ms = get_malloc_state();
@@ -52,6 +57,7 @@ void *dl_malloc(size_t size) {
     if (mem != NULL) {
       return mem;
     }
+    OUT_ERR("smallbin miss for normalized_size=%zu", normalized_size);
   }
 
   if (!is_bin_empty(unsorted_bin(ms))) {
@@ -59,12 +65,18 @@ void *dl_malloc(size_t size) {
     if (mem != NULL) {
       return mem;
     }
+    OUT_ERR("unsorted bin miss for normalized_size=%zu", normalized_size);
   }
 
   return use_top(ms, normalized_size);
 }
 
 void dl_free(void *ptr) {
+  if (ptr == NULL) {
+    OUT_ERR("dl_free called with NULL pointer");
+    return;
+  }
+
   chunk_ptr cptr = mem_2_chunk(ptr);
   mstate ms = get_malloc_state();
   INTERNAL_SIZE_T size = chunksize(cptr);
@@ -118,6 +130,8 @@ void dl_free(void *ptr) {
 
     return;
   }
+
+  OUT_ERR("dl_free chunk has size 0 at ptr=%p", ptr);
 }
 
 static void init_malloc_state(mstate ms) {
@@ -133,12 +147,20 @@ static void init_malloc_state(mstate ms) {
 }
 
 static void *use_top(mstate ms, size_t size) {
+  printf("using top\n");
   void *mem;
   int new_size;
-  if (chunksize(ms->top) < size) {
+  INTERNAL_SIZE_T top_size = chunksize(ms->top);
+  if (top_size < size) {
+    PRINT_LD_2(top_size, size);
     mem = get_mem_from_os(SYS_ALLOC_PAGE_SIZE);
+    if (mem == NULL) {
+      OUT_ERR("use_top failed to obtain memory from OS");
+      return NULL;
+    }
     new_size = SYS_ALLOC_PAGE_SIZE - size;
   } else {
+    PRINT_LD_2(top_size, size);
     mem = ms->top->data;
     new_size = ms->top->prev_size - size;
   }
@@ -150,24 +172,37 @@ static void *use_top(mstate ms, size_t size) {
   */
 
   // bump up the mem to reserve some space for the header
-  void *user_data = (char *)mem + 2 * SIZE_SZ;
+  printf("Assigning user_data = (char *)mem + 2 * SIZE_SZ;\n");
+  char *user_data = chunk_2_mem(mem);
 
-  ms->top->data =
-      (char *)user_data + size; // bumps up the pointer of top by size(since
-                                // it's being allocated to the program)
+  printf("Updating ms->top->data = (char *)user_data + size;\n");
+  ms->top->data = user_data + size; // bumps up the pointer of top by size(since
+                                    // it's being allocated to the program)
+
+  printf("Updating ms->top->size = new_size;\n");
   ms->top->size = new_size;
 
+  printf("Assigning ch = mem_2_chunk(user_data);\n");
   chunk_ptr ch = mem_2_chunk(user_data);
 
+  printf("Setting ch->size = size;\n");
   ch->size = size;
 
-  if (size >= MMAP_TAG_THRESHOLD)
+  printf("Checking if size >= MMAP_TAG_THRESHOLD;\n");
+  if (size >= MMAP_TAG_THRESHOLD) {
+    printf("Calling set_mmapd(ch);\n");
     set_mmapd(
         ch); // sets the second last bit to be 1, specifying that this chunk
              // is mmap allocated, and should be returned back to the OS
+  }
 
+  printf("Setting ch->prev_size = 0;\n");
   ch->prev_size = 0;
+
+  printf("Setting ch->data = user_data;\n");
   ch->data = user_data;
+
+  printf("Setting ch->next_chunk = ms->top->data;\n");
   ch->next_chunk = ms->top->data;
 
   return ch->data;
@@ -178,7 +213,7 @@ static void *get_mem_from_os(size_t size) {
       mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, 0, 0);
 
   if (mem == MAP_FAILED) {
-    printf("Couldn't allocate memory from the OS\nerrno value: %d\n", errno);
+    OUT_ERR("mmap failed for size=%zu errno=%d", size, errno);
     exit(1);
   }
   return mem;
@@ -186,7 +221,7 @@ static void *get_mem_from_os(size_t size) {
 
 static void return_mem_to_os(void *p, size_t size) {
   if (munmap(p, size) == -1) {
-    printf("Couldn't return the memory back to OS");
+    OUT_ERR("munmap failed for p=%p size=%zu errno=%d", p, size, errno);
     exit(1);
   }
 }
@@ -213,22 +248,15 @@ static void link_smallbin(mstate ms, chunk_ptr c, size_t cs) {
   }
 }
 
-static void rebin_chunk(mstate ms, chunk_ptr c, size_t cs) {
-  if (cs <= ms->max_fast) {
-    size_t idx = fastbin_index(cs);
-    set_fastchunk(ms);
-    c->next_chunk = ms->fast_bins[idx];
-    ms->fast_bins[idx] = c;
-  } else if (in_smallbin_range(cs)) {
-    link_smallbin(ms, c, cs);
-  } else {
-    link_unsorted(ms, c);
-  }
-}
-
 static void *finish_allocation(mstate ms, chunk_ptr c, size_t nb, size_t cs) {
   chunk_ptr next;
   size_t used = nb;
+
+  if (cs < nb) {
+    OUT_ERR("finish_allocation: chunk size %zu smaller than request %zu", cs,
+            nb);
+    return NULL;
+  }
 
   if (cs > nb + MIN_CHUNK_SIZE) {
     set_head(c, nb | PREV_INUSE | (c->size & IS_MMAPED));
@@ -273,6 +301,8 @@ static void *malloc_smallbins(mstate ms, size_t nb) {
     return finish_allocation(ms, c, nb, chunksize(c));
   }
 
+  OUT_ERR("malloc_smallbins: no suitable bin for nb=%zu (searched %zu..%zu)",
+          nb, start, (size_t)(NSMALLBINS - 1));
   return NULL;
 }
 
@@ -296,5 +326,18 @@ static void *malloc_unsorted(mstate ms, size_t nb) {
     rebin_chunk(ms, c, cs);
   }
 
+  OUT_ERR("malloc_unsorted: no chunk large enough for nb=%zu", nb);
   return NULL;
+}
+static void rebin_chunk(mstate ms, chunk_ptr c, size_t cs) {
+  if (cs <= ms->max_fast) {
+    size_t idx = fastbin_index(cs);
+    set_fastchunk(ms);
+    c->next_chunk = ms->fast_bins[idx];
+    ms->fast_bins[idx] = c;
+  } else if (in_smallbin_range(cs)) {
+    link_smallbin(ms, c, cs);
+  } else {
+    link_unsorted(ms, c);
+  }
 }

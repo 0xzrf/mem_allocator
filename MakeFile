@@ -10,6 +10,8 @@ endif
 CRITERION_CFLAGS = -I$(HOMEBREW_PREFIX)/include
 CRITERION_LIBS = -L$(HOMEBREW_PREFIX)/lib -lcriterion
 
+MALLOC_OBJ = exec/malloc.o
+MALLOC_TEST_OBJ = exec/malloc_test.o
 TEST_OUT = exec/test_exec
 TEST_SOURCES = $(wildcard tests/unit/*.c tests/integrated/*.c)
 BENCH_OUT = exec/bench_exec
@@ -17,19 +19,37 @@ BENCH_SOURCES = $(wildcard tests/bench/*.c)
 
 .PHONY: build build_and_run_ex test bench
 
-build:
+$(MALLOC_OBJ): $(MODULES)
 	mkdir -p exec
-	$(CC) $(CFLAGS) -o $(OUT) examples/normal_allocation.c $(MODULES)
+	$(CC) $(CFLAGS) -c -o $(MALLOC_OBJ) $(MODULES)
+
+$(MALLOC_TEST_OBJ): $(MODULES)
+	mkdir -p exec
+	$(CC) $(CFLAGS) -DMALLOC_ERR_LOG -c -o $(MALLOC_TEST_OBJ) $(MODULES)
+
+build: $(MALLOC_OBJ)
+	mkdir -p exec
+	$(CC) $(CFLAGS) -o $(OUT) example/normal_allocation.c $(MALLOC_OBJ)
 
 build_and_run_ex: build
 	./$(OUT)
 
-test:
+test: $(MALLOC_TEST_OBJ)
 	mkdir -p exec
-	$(CC) $(CFLAGS) $(CRITERION_CFLAGS) -o $(TEST_OUT) $(TEST_SOURCES) $(MODULES) $(CRITERION_LIBS)
+	$(CC) $(CFLAGS) $(CRITERION_CFLAGS) -o $(TEST_OUT) $(TEST_SOURCES) $(MALLOC_TEST_OBJ) $(CRITERION_LIBS)
 	./$(TEST_OUT)
 
-bench:
+bench: $(MALLOC_OBJ)
 	mkdir -p exec
-	$(CC) $(CFLAGS) $(CRITERION_CFLAGS) -o $(BENCH_OUT) $(BENCH_SOURCES) $(MODULES) $(CRITERION_LIBS)
+	$(CC) $(CFLAGS) $(CRITERION_CFLAGS) -o $(BENCH_OUT) $(BENCH_SOURCES) $(MALLOC_OBJ) $(CRITERION_LIBS)
+	./$(OUT)
+
+test: $(MALLOC_TEST_OBJ)
+	mkdir -p exec
+	$(CC) $(CFLAGS) $(CRITERION_CFLAGS) -o $(TEST_OUT) $(TEST_SOURCES) $(MALLOC_TEST_OBJ) $(CRITERION_LIBS)
+	./$(TEST_OUT)
+
+bench: $(MALLOC_OBJ)
+	mkdir -p exec
+	$(CC) $(CFLAGS) $(CRITERION_CFLAGS) -o $(BENCH_OUT) $(BENCH_SOURCES) $(MALLOC_OBJ) $(CRITERION_LIBS)
 	./$(BENCH_OUT)
