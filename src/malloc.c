@@ -3,6 +3,7 @@
 static struct malloc_state malloc_state;
 
 static void init_malloc_state(mstate);
+static void ensure_top(mstate ms, size_t need);
 static void *use_top(mstate, size_t size);
 static void *get_mem_from_os(size_t size);
 static void return_mem_to_os(void *, size_t);
@@ -23,14 +24,6 @@ void *dl_malloc(size_t size) {
   size_t normalized_size = request_2_size(size);
 
   mstate ms = get_malloc_state();
-  /*
-   * we need to check to see if the bins are populated or not(from malloc_state)
-   * If not, the path would be to check the top(wilderness) chunk, which will
-   * have additional memory allocated to it
-   *
-   * This will be called when the malloc is first called, and later populate the
-   * bins when the program frees the memory allocated by this malloc
-   */
 
   if (has_fastchunk(ms) &&
       (CHUNK_SIZE_T)normalized_size <= (CHUNK_SIZE_T)ms->max_fast) {
@@ -43,6 +36,14 @@ void *dl_malloc(size_t size) {
     }
   }
 
+  /*
+   * we need to check to see if the bins are populated or not(from malloc_state)
+   * If not, the path would be to check the top(wilderness) chunk, which will
+   * have additional memory allocated to it
+   *
+   * This will be called when the malloc is first called, and later populate the
+   * bins when the program frees the memory allocated by this malloc
+   */
   if (!has_any_chunk(ms)) {
     if (ms->max_fast == 0) {
       init_malloc_state(ms);
@@ -89,7 +90,7 @@ void dl_free(void *ptr) {
       set_fastchunk(ms);
       chunk_ptr *head = &(ms->fast_bins[fastbin_index(size)]);
       cptr->next_chunk = *head;
-      head = &cptr;
+      *head = cptr;
       return;
     }
     // Check if the memory being freed is was allocated from OS
@@ -114,7 +115,7 @@ void dl_free(void *ptr) {
     }
 
     // STEP 2: Check for forward coalescing
-    if (cptr->next_chunk != ms->top) {
+    if (next_chunk != ms->top) {
       size_t nextinuse = inuse_bit_at_offset(next_chunk, next_size);
       set_head(next_chunk, next_size);
 
@@ -146,66 +147,51 @@ static void init_malloc_state(mstate ms) {
   ms->top = initial_top(ms);
 }
 
-static void *use_top(mstate ms, size_t size) {
-  printf("using top\n");
-  void *mem;
-  int new_size;
-  INTERNAL_SIZE_T top_size = chunksize(ms->top);
-  if (top_size < size) {
-    PRINT_LD_2(top_size, size);
-    mem = get_mem_from_os(SYS_ALLOC_PAGE_SIZE);
-    if (mem == NULL) {
-      OUT_ERR("use_top failed to obtain memory from OS");
-      return NULL;
-    }
-    new_size = SYS_ALLOC_PAGE_SIZE - size;
+/*
+ * Grow the wilderness (top) chunk until it can satisfy at least `need` bytes.
+ * Top lives in its own mmap'd arena, separate from bin sentinels.
+ */
+static void ensure_top(mstate ms, size_t need) {
+  size_t grow = SYS_ALLOC_PAGE_SIZE;
+
+  while (grow < need + MIN_CHUNK_SIZE) {
+    grow += SYS_ALLOC_PAGE_SIZE;
+  }
+
+  while (ms->top == NULL || chunksize(ms->top) < need) {
+    void *arena = get_mem_from_os(grow);
+    chunk_ptr top = (chunk_ptr)arena;
+
+    top->prev_size = 0;
+    set_head(top, grow);
+    ms->top = top;
+  }
+}
+
+/*
+ * Carve an in-use chunk from the front of the wilderness (dlmalloc top).
+ * Returns user memory via chunk_2_mem; does not tag IS_MMAPED (heap path).
+ */
+static void *use_top(mstate ms, size_t nb) {
+  ensure_top(ms, nb);
+
+  chunk_ptr top = ms->top;
+  INTERNAL_SIZE_T top_size = chunksize(top);
+  chunk_ptr chunk;
+
+  if (top_size >= nb + MIN_CHUNK_SIZE) {
+    set_head(top, nb | PREV_INUSE);
+    ms->top = chunk_at_offset(top, nb);
+    set_head(ms->top, top_size - nb);
+    ms->top->size |= PREV_INUSE;
+    chunk = top;
   } else {
-    PRINT_LD_2(top_size, size);
-    mem = ms->top->data;
-    new_size = ms->top->size - size;
+    set_head(top, top_size | PREV_INUSE);
+    chunk = top;
+    ms->top = NULL;
   }
 
-  /*
-  Since we're cutting off the front of the memory allocated from mmap
-  We need to also make sure that we're storing it in a chunk and returning it to
-  the user since when they return this ptr, we need to know it's size
-  */
-
-  // bump up the mem to reserve some space for the header
-  printf("Assigning user_data = (char *)mem + 2 * SIZE_SZ;\n");
-  char *user_data = chunk_2_mem(mem);
-
-  printf("Updating ms->top->data = (char *)user_data + size;\n");
-  ms->top->data = user_data + size; // bumps up the pointer of top by size(since
-                                    // it's being allocated to the program)
-
-  printf("Updating ms->top->size = new_size;\n");
-  ms->top->size = new_size;
-
-  printf("Assigning ch = mem_2_chunk(user_data);\n");
-  chunk_ptr ch = mem_2_chunk(user_data);
-
-  printf("Setting ch->size = size;\n");
-  ch->size = size;
-
-  printf("Checking if size >= MMAP_TAG_THRESHOLD;\n");
-  if (size >= MMAP_TAG_THRESHOLD) {
-    printf("Calling set_mmapd(ch);\n");
-    set_mmapd(
-        ch); // sets the second last bit to be 1, specifying that this chunk
-             // is mmap allocated, and should be returned back to the OS
-  }
-
-  printf("Setting ch->prev_size = 0;\n");
-  ch->prev_size = 0;
-
-  printf("Setting ch->data = user_data;\n");
-  ch->data = user_data;
-
-  printf("Setting ch->next_chunk = ms->top->data;\n");
-  ch->next_chunk = ms->top->data;
-
-  return ch->data;
+  return chunk_2_mem(chunk);
 }
 
 static void *get_mem_from_os(size_t size) {
