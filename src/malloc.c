@@ -14,8 +14,6 @@ static void *malloc_smallbins(mstate ms, size_t nb);
 static void *malloc_unsorted(mstate ms, size_t nb);
 
 void *dl_malloc(size_t size) {
-  printf("Allocating memory\n");
-
   if (size == 0) {
     OUT_ERR("dl_malloc called with size 0");
     return NULL;
