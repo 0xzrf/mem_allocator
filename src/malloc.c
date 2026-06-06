@@ -12,7 +12,7 @@ static void rebin_chunk(mstate ms, chunk_ptr c, size_t cs);
 static void *malloc_smallbins(mstate ms, size_t nb);
 static void *malloc_unsorted(mstate ms, size_t nb);
 
-void *malloc(size_t size) {
+void *dl_malloc(size_t size) {
   printf("Allocating memory\n");
 
   size_t normalized_size = request_2_size(size);
@@ -64,7 +64,7 @@ void *malloc(size_t size) {
   return use_top(ms, normalized_size);
 }
 
-void free(void *ptr) {
+void dl_free(void *ptr) {
   chunk_ptr cptr = mem_2_chunk(ptr);
   mstate ms = get_malloc_state();
   INTERNAL_SIZE_T size = chunksize(cptr);

@@ -26,7 +26,7 @@ build_and_run_ex: build
 
 test:
 	mkdir -p exec
-	$(CC) $(CFLAGS) $(CRITERION_CFLAGS) -o $(TEST_OUT) $(TEST_SOURCES) $(CRITERION_LIBS)
+	$(CC) $(CFLAGS) $(CRITERION_CFLAGS) -o $(TEST_OUT) $(TEST_SOURCES) $(MODULES) $(CRITERION_LIBS)
 	./$(TEST_OUT)
 
 bench:
