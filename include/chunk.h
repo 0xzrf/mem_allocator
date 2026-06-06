@@ -26,7 +26,7 @@
 #define set_chunksize(p, s) ((p)->size = s | ((p)->size & ~ANYCHUNK_BIT))
 #define chunk_at_offset(p, s) ((chunk_ptr)(((char *)(p)) + (s)))
 
-#define unlink(p, new_size, new_next_chunk)                                    \
+#define unlink_chunks(p, new_size, new_next_chunk)                             \
   do {                                                                         \
     p->size = new_size;                                                        \
     p->next_chunk = new_next_chunk;                                            \

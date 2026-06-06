@@ -98,7 +98,7 @@ void free(void *ptr) {
       size_t new_size = prevsize;
       chunk_ptr next_chunk = cptr->next_chunk;
       cptr = chunk_at_offset(cptr, -((long)prevsize));
-      unlink(cptr, new_size, next_chunk);
+      unlink_chunks(cptr, new_size, next_chunk);
     }
 
     // STEP 2: Check for forward coalescing
@@ -109,7 +109,7 @@ void free(void *ptr) {
       if (!nextinuse) {
         size_t new_size = cptr->size + next_size;
         chunk_ptr new_next_chunk = next_chunk->next_chunk;
-        unlink(cptr, new_size, new_next_chunk);
+        unlink_chunks(cptr, new_size, new_next_chunk);
       }
     }
 

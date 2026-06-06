@@ -11,7 +11,7 @@ CRITERION_CFLAGS = -I$(HOMEBREW_PREFIX)/include
 CRITERION_LIBS = -L$(HOMEBREW_PREFIX)/lib -lcriterion
 
 TEST_OUT = exec/test_exec
-TEST_SOURCES = $(wildcard tests/unit/*.c)
+TEST_SOURCES = $(wildcard tests/unit/*.c tests/integrated/*.c)
 BENCH_OUT = exec/bench_exec
 BENCH_SOURCES = $(wildcard tests/bench/*.c)
 
