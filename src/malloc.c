@@ -162,7 +162,7 @@ static void *use_top(mstate ms, size_t size) {
   } else {
     PRINT_LD_2(top_size, size);
     mem = ms->top->data;
-    new_size = ms->top->prev_size - size;
+    new_size = ms->top->size - size;
   }
 
   /*
