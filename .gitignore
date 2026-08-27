@@ -58,3 +58,4 @@ exec
 
 # tools build output
 tools/bin/
+.vscode
