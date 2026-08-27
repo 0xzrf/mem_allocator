@@ -5,11 +5,24 @@
 
 typedef struct mem_chunk *mchunkptr;
 
+// macros
+#define chunk2mem(c) ((void *)((char *)c + 2 * INTERNAL_SIZE_T))
+#define mem2chunk(m) ((void *) ((char *)m - 2 * INTERNAL_SIZE_T))
+
+#define PREV_IN_USE_BIT 0x1
+#define MMAPED_BIT 0x2
+#define FLAG_BITS 0xf
+
+#define prev_in_use(c) (c->size & PREV_IN_USE_BIT)
+
 struct mem_chunk {
    INTERNAL_SIZE_T prev_size;
+   // the lower 4 bits are free to be used, since the size is a multiple of 16
+   // hence, we use the following as flags: [mmaped] [prev_in_use]
    INTERNAL_SIZE_T size;
    mchunkptr fd;
    mchunkptr bk;
 };
+
 
 #endif
