@@ -21,6 +21,6 @@ void * dl_malloc(size_t);
 void dl_free(void *);
 
 static void init_state();
-static void *fetch_mem_from_os();
+static void *fetch_mem_from_top();
 
 #endif

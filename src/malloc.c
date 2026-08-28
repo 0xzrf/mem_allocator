@@ -10,16 +10,17 @@ void * dl_malloc(size_t req) {
     if (!any_bin_free()) {
         if (top_empty()) {
             init_state();
+            return fetch_mem_from_top(req);
         }
     }
 }
 
-static void *fetch_mem_from_os(size_t req) {
+static void *fetch_mem_from_top(size_t req) {
     void *return_mem;
     mchunkptr ta = state_ptr->top_allocatioin;
     INTERNAL_SIZE_T ts = ta->size;
 
-    if (ta == NULL) {
+    if (top_empty()) {
         return_mem = mmap_at_offset(NULL);
 
         ts = PAGE_SIZE;
@@ -47,7 +48,6 @@ static void *fetch_mem_from_os(size_t req) {
 }
 
 static void init_state() {
-
 }
 
 
