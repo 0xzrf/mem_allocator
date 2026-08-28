@@ -20,7 +20,7 @@ static void *fetch_mem_from_os(size_t req) {
     INTERNAL_SIZE_T ts = ta->size;
 
     if (ta == NULL) {
-        return_mem = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1 , 0);
+        return_mem = mmap_at_offset(NULL);
 
         ts = PAGE_SIZE;
          if (return_mem == MAP_FAILED) {
@@ -28,7 +28,7 @@ static void *fetch_mem_from_os(size_t req) {
         }
         ta = return_mem;
     } else if (chunk_size(ta) < req) {
-        return_mem = mmap((char *)ta + (chunk_size(ta) + 2 * SIZE_T), PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1 , 0);
+        return_mem = mmap_at_offset((char *)ta + (chunk_size(ta) + 2 * SIZE_T));
 
         ts = ts + PAGE_SIZE;
 
@@ -42,7 +42,7 @@ static void *fetch_mem_from_os(size_t req) {
     set_size(user_data, req);
     bump_top_to_offset(req);
 
-    // fd is unused by us if it's 
+    // fd is unused by us if allocated
     return (void *) user_data->fd;
 }
 
