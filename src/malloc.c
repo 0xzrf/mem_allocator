@@ -17,7 +17,7 @@ void * dl_malloc(size_t req) {
 static void *fetch_mem_from_os(size_t req) {
     void * return_mem = mmap(NULL, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1 , 0);
 
-    if (return_mem == NULL) {
+    if (return_mem == MAP_FAILED) {
         panic("invalid memory");
     }
 
