@@ -60,3 +60,4 @@ exec
 tools/bin/
 .vscode
 build/*
+test_scripts
