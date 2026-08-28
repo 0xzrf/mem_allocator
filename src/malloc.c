@@ -13,11 +13,13 @@ void * dl_malloc(size_t req) {
             return fetch_mem_from_top(req);
         }
     }
+
+    // check fastbin, unsorted bin, small bins and then large bins. If no fit, fetch from top
 }
 
 static void *fetch_mem_from_top(size_t req) {
     void *return_mem;
-    mchunkptr ta = state_ptr->top_allocatioin;
+    mchunkptr ta = state_ptr->top_allocation;
     INTERNAL_SIZE_T ts = ta->size;
 
     if (top_empty()) {
@@ -42,6 +44,7 @@ static void *fetch_mem_from_top(size_t req) {
 
     set_size(user_data, req);
     bump_top_to_offset(req);
+    set_size(ta, ts - req);
 
     // fd is unused by us if allocated
     return (void *) user_data->fd;

@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "state.h"
+#include "bins.h"
 #include <sys/mman.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +16,7 @@
         abort();                                              \
     } while (0)
 
-#define PAGE_SIZE 1 << 15
+#define PAGE_SIZE (1 << 15)
 
 void * dl_malloc(size_t);
 void dl_free(void *);

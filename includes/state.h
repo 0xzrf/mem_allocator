@@ -4,17 +4,17 @@
 #include "stddef.h"
 #include "chunk.h"
 
-typedef mstate *mstateptr;
 
 #define mmap_at_offset(size) mmap((size), PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1 , 0)
 
 #define MAX_FREE_BIT 0x1
 #define any_bin_free() (state_ptr->max_free_bin & MAX_FREE_BIT)
-#define top_empty() (state_ptr->top_allocations == NULL)
+#define top_empty() (state_ptr->top_allocation == NULL)
 
 typedef struct {
     size_t max_free_bin; // the lower bit is there to signal the presence of any free chunks in bin
     mchunkptr *top_allocation; // used to fetch data and merge freed data when nothing else is free
 } mstate;
 
+typedef mstate *mstateptr;
 #endif
