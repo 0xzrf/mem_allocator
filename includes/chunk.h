@@ -14,6 +14,9 @@ typedef struct mem_chunk *mchunkptr;
 #define FLAG_BITS 0xf
 
 #define prev_in_use(c) (c->size & PREV_IN_USE_BIT)
+// This is fine as long as we don't compare it like is_mmaped == 1. truthy is when > 0
+#define is_mmaped(c) (c->size & MMAPED_BIT) 
+#define chunk_size(c) (c->size & ~FLAG_BITS)
 
 struct mem_chunk {
    INTERNAL_SIZE_T prev_size;
@@ -23,6 +26,5 @@ struct mem_chunk {
    mchunkptr fd;
    mchunkptr bk;
 };
-
 
 #endif
