@@ -4,5 +4,6 @@
 #include "stddef.h"
 
 #define INTERNAL_SIZE_T size_t
+#define SIZE_T 8
 
 #endif
