@@ -1,7 +1,7 @@
 #include "malloc.h"
 
 static mstate memory_state;
-static mstateptr state_ptr = NULL;
+static mstateptr state_ptr = &memory_state;
 
 void * dl_malloc(size_t req) {
     size_t aligned_req = request2size(req);
@@ -10,8 +10,8 @@ void * dl_malloc(size_t req) {
     if (!any_bin_free()) {
         if (top_empty()) {
             init_state();
-            return fetch_mem_from_top(req);
         }
+        return fetch_mem_from_top(req);
     }
 
     // check fastbin, unsorted bin, small bins and then large bins. If no fit, fetch from top
@@ -20,7 +20,7 @@ void * dl_malloc(size_t req) {
 static void *fetch_mem_from_top(size_t req) {
     void *return_mem;
     mchunkptr ta = state_ptr->top_allocation;
-    INTERNAL_SIZE_T ts = ta->size;
+    INTERNAL_SIZE_T ts;
 
     if (top_empty()) {
         return_mem = mmap_at_offset(NULL);
@@ -33,7 +33,7 @@ static void *fetch_mem_from_top(size_t req) {
     } else if (chunk_size(ta) < req) {
         return_mem = mmap_at_offset((char *)ta + (chunk_size(ta) + 2 * SIZE_T));
 
-        ts = ts + PAGE_SIZE;
+        ts = ta->size + PAGE_SIZE;
 
          if (return_mem == MAP_FAILED) {
              panic("invalid memory");
@@ -46,8 +46,7 @@ static void *fetch_mem_from_top(size_t req) {
     bump_top_to_offset(req);
     set_size(ta, ts - req);
 
-    // fd is unused by us if allocated
-    return (void *) user_data->fd;
+    return chunk2mem(user_data);
 }
 
 static void init_state() {

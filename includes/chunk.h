@@ -6,8 +6,8 @@
 typedef struct mem_chunk *mchunkptr;
 
 // macros
-#define chunk2mem(c) ((void *)((char *)c + 2 * INTERNAL_SIZE_T))
-#define mem2chunk(m) ((void *) ((char *)m - 2 * INTERNAL_SIZE_T))
+#define chunk2mem(c) ((void *)((char *)c + 2 * SIZE_T))
+#define mem2chunk(m) ((void *) ((char *)m - 2 * SIZE_T))
 
 #define PREV_IN_USE_BIT 0x1
 #define MMAPED_BIT 0x2

@@ -62,3 +62,6 @@ bench:
 
 clean:
 	@rm -rf build
+
+run_script:
+	cc -std=c11 -Iincludes -g -O1 -o build/script test_scripts/script.c src/*.c && ./build/script
