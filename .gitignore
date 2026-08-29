@@ -61,3 +61,4 @@ tools/bin/
 .vscode
 build/*
 test_scripts
+.clang-format
