@@ -11,13 +11,13 @@ typedef struct mem_chunk *mchunkptr;
 
 #define PREV_IN_USE_BIT 0x1
 #define MMAPED_BIT 0x2
-#define FLAG_BITS 0xf
+#define FLAG_BITS (PREV_IN_USE_BIT | MMAPED_BIT)
 
 // setters
 #define set_size(p, s) ((p)->size = (s))
 
 // state_ptr->top_allocation specific
-#define bump_top_to_offset(s) (state_ptr->top_allocation = (mchunkptr)((char *)state_ptr->top_allocation + s + 2 * SIZE_T))
+#define bump_top_to_offset(t, s) (t = (mchunkptr)((char *)t + (s) + (2 * SIZE_T)))
 
 #define prev_in_use(c) (c->size & PREV_IN_USE_BIT)
 // This is fine as long as we don't compare it like is_mmaped == 1. truthy is when > 0

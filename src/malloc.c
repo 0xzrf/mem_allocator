@@ -1,5 +1,5 @@
 #include "malloc.h"
-
+#include "stdio.h"
 static mstate memory_state;
 static mstateptr state_ptr = &memory_state;
 
@@ -11,7 +11,7 @@ void * dl_malloc(size_t req) {
         if (top_empty()) {
             init_state();
         }
-        return fetch_mem_from_top(req);
+        return fetch_mem_from_top(aligned_req);
     }
 
     // check fastbin, unsorted bin, small bins and then large bins. If no fit, fetch from top
@@ -26,7 +26,7 @@ static void *fetch_mem_from_top(size_t req) {
         return_mem = mmap_at_offset(NULL);
 
         ts = PAGE_SIZE;
-         if (return_mem == MAP_FAILED) {
+        if (return_mem == MAP_FAILED) {
              panic("invalid memory");
         }
         ta = return_mem;
@@ -43,8 +43,11 @@ static void *fetch_mem_from_top(size_t req) {
     mchunkptr user_data = (mchunkptr) return_mem;
 
     set_size(user_data, req);
-    bump_top_to_offset(req);
+    
+    bump_top_to_offset(ta, req);
     set_size(ta, ts - req);
+
+    state_ptr->top_allocation = ta;
 
     return chunk2mem(user_data);
 }
