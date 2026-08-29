@@ -15,14 +15,16 @@ typedef struct mem_chunk *mchunkptr;
 
 // setters
 #define set_size(p, s) ((p)->size = (s))
+#define set_prev_in_use(p) ((p)->size = (p)->size | PREV_IN_USE_BIT)
+#define set_mmaped(p) ((p)->size = (p)->size | MMAPED_BIT)
 
-// state_ptr->top_allocation specific
-#define bump_top_to_offset(t, s) (t = (mchunkptr)((char *)t + (s) + (2 * SIZE_T)))
-
-#define prev_in_use(c) (c->size & PREV_IN_USE_BIT)
-// This is fine as long as we don't compare it like is_mmaped == 1. truthy is when > 0
 #define is_mmaped(c) (c->size & MMAPED_BIT) 
 #define chunk_size(c) ((c)->size & ~FLAG_BITS)
+#define prev_in_use(c) (c->size & PREV_IN_USE_BIT)
+
+#define bump_top_to_offset(t, s) (t = (mchunkptr)((char *)t + (s) + (2 * SIZE_T)))
+
+// This is fine as long as we don't compare it like is_mmaped == 1. truthy is when > 0
 
 struct mem_chunk {
    INTERNAL_SIZE_T prev_size;

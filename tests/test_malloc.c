@@ -14,3 +14,4 @@ Test(malloc_correctness, malloc_chunk_size_correct_after_alloc) {
 
     cr_assert_eq(aligned_req, actual_chunk_size);
 }
+

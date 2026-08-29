@@ -43,7 +43,9 @@ static void *fetch_mem_from_top(size_t req) {
     mchunkptr user_data = (mchunkptr) return_mem;
 
     set_size(user_data, req);
-    
+    set_prev_in_use(user_data);
+    set_mmaped(user_data);
+
     bump_top_to_offset(ta, req);
     set_size(ta, ts - req);
 
