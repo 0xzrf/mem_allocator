@@ -17,4 +17,4 @@ Test(malloc_correctness, malloc_chunk_size_correct_after_alloc) {
     size_t actual_chunk_size = chunk_size(chunk);
     printf("actual: %zu\n expected: %zu", actual_chunk_size, aligned_req);
     cr_assert_eq(aligned_req, actual_chunk_size);
-}   
+}
