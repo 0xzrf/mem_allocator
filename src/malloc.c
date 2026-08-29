@@ -17,6 +17,8 @@ void * dl_malloc(size_t req) {
     // check fastbin, unsorted bin, small bins and then large bins. If no fit, fetch from top
 }
 
+void dl_free(void *) {}
+
 static void *fetch_mem_from_top(size_t req) {
     void *return_mem;
     mchunkptr ta = state_ptr->top_allocation;
@@ -58,4 +60,3 @@ static void init_state() {
 }
 
 
-void dl_free(void *) {}
