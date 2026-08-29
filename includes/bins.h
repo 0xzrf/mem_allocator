@@ -12,7 +12,7 @@
 #define NBINS_LARGE       40
 #define NBINS             (NBINS_SMALL + NBINS_LARGE)
 #define MIN_LARGE_SIZE    (NBINS_SMALL * MALLOC_ALIGN)
-#define MAX_FAST_BIN      80
+#define MAX_FASTBIN_SIZE  80
 
 typedef struct {
     mchunkptr next;
@@ -25,6 +25,8 @@ typedef struct {
 
 #define bin_at_size(size) (state_ptr->bins[bin_ix((size))])
 #define is_bin_empty(i)   (state_ptr->bins[i].next == state_ptr->bins[i].back)
+#define unsorted_bins()   (&state_ptr->bins[1])
+
 #define insert_at_head(i, c)                                                                       \
     (do {                                                                                          \
         head = &state_ptr->bins[(i)];                                                              \
@@ -33,6 +35,15 @@ typedef struct {
         head.next.back = (c);                                                                      \
         head.next = (c);                                                                           \
     } while (false))
+
+#define insert_at_head_freebin(i, c)                                                               \
+    do {                                                                                           \
+        bin *head = &state_ptr->fastbins[(i)];                                                     \
+        (c).back = head;                                                                           \
+        (c).next = head.next;                                                                      \
+        head.next.back = (c);                                                                      \
+        head.next = (c);                                                                           \
+    } while (false)
 
 #define init_bin(i)     (state_ptr->bins[(i)].next = state_ptr->bins[(i)].back)
 #define init_fastbin(i) (state_ptr->fastbins[(i)].next = state_ptr->fastbins[(i)].back)

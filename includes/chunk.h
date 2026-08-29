@@ -2,7 +2,7 @@
 #define mem_alloc_chunk_h
 
 #include "./types.h"
-
+#include "bins.h"
 typedef struct mem_chunk *mchunkptr;
 
 // macros
@@ -31,8 +31,8 @@ struct mem_chunk {
     // the lower 4 bits are free to be used, since the size is a multiple of 16
     // hence, we use the following as flags: [mmaped] [prev_in_use]
     INTERNAL_SIZE_T size;
-    mchunkptr fd;
-    mchunkptr bk;
+    bin *next;
+    bin *back;
 };
 
 #endif

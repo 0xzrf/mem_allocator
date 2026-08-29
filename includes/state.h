@@ -17,7 +17,7 @@ typedef struct {
     size_t max_free_bin; // the lower bit is there to signal the presence of any free chunks in bin
     mchunkptr top_allocation; // used to fetch data and merge freed data when nothing else is free
     bin bins[NBINS];
-    bin fastbins[MAX_FAST_BIN >> 4]
+    bin fastbins[MAX_FASTBIN_SIZE >> 4]
 } mstate;
 
 typedef mstate *mstateptr;

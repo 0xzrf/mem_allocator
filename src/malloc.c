@@ -17,7 +17,19 @@ void *dl_malloc(size_t req) {
     // check fastbin, unsorted bin, small bins and then large bins. If no fit, fetch from top
 }
 
-void dl_free(void *ptr) {}
+void dl_free(void *ptr) {
+    mchunkptr chunk = mem2chunk(ptr);
+
+    size_t size = chunk_size(chunk);
+
+    // if < MAX_FASTBIN_SIZE, put to fastbin
+    if (size <= MAX_FASTBIN_SIZE) {
+        insert_at_head_freebin(bin_ix(size), chunk);
+    }
+
+    // else, put it in unsorted list
+    bin *unsorted_bins = unsorted_bins();
+}
 
 static void *fetch_mem_from_top(size_t req) {
     void *return_mem;
@@ -62,7 +74,7 @@ static void init_state() {
     for (; i < NBINS; i++) {
         init_bin(i);
     }
-    for (i = 1; i < MAX_FAST_BIN >> 4; i++) {
+    for (i = 1; i < MAX_FASTBIN_SIZE >> 4; i++) {
         init_fastbin(i);
     }
 }
