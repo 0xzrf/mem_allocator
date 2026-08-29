@@ -18,9 +18,9 @@ typedef struct mem_chunk *mchunkptr;
 #define set_prev_in_use(p) ((p)->size = (p)->size | PREV_IN_USE_BIT)
 #define set_mmaped(p) ((p)->size = (p)->size | MMAPED_BIT)
 
-#define is_mmaped(c) (c->size & MMAPED_BIT) 
-#define chunk_size(c) ((c)->size & ~FLAG_BITS)
+#define is_mmaped(c) ((c)->size & MMAPED_BIT) 
 #define prev_in_use(c) (c->size & PREV_IN_USE_BIT)
+#define chunk_size(c) ((c)->size & ~FLAG_BITS)
 
 #define bump_top_to_offset(t, s) (t = (mchunkptr)((char *)t + (s) + (2 * SIZE_T)))
 

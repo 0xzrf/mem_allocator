@@ -13,5 +13,8 @@ Test(malloc_correctness, malloc_chunk_size_correct_after_alloc) {
     size_t actual_chunk_size = chunk_size(chunk);
 
     cr_assert_eq(aligned_req, actual_chunk_size);
+
+    cr_assert(is_mmaped(chunk));
+    cr_assert(prev_in_use(chunk));
 }
 
