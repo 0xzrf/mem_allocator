@@ -14,12 +14,12 @@
 #define MIN_LARGE_SIZE    (NBINS_SMALL * MALLOC_ALIGN)
 #define MAX_FASTBIN_SIZE  80
 
-typedef bin *binptr;
-
-typedef struct {
-    binptr next;
-    binptr back;
+typedef struct bin {
+    struct bin *next;
+    struct bin *back;
 } bin;
+
+typedef struct bin *binptr;
 
 // macros
 // large bin not supported yet

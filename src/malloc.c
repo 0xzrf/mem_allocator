@@ -30,9 +30,6 @@ void dl_free(void *ptr) {
         return;
     }
 
-    // else, put it in unsorted list
-    bin *unsorted_bins = unsorted_bins();
-
     // coalece front and back if free
     if (!prev_in_use(chunk)) {
         mchunkptr prev_chunk = prev_chunk(chunk);

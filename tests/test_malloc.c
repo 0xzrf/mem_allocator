@@ -2,7 +2,6 @@
 #include <stddef.h>
 
 #include "malloc.h"
-#include "stdio.h"
 
 Test(malloc_correctness, malloc_chunk_size_correct_after_alloc) {
     size_t request_size = 8;
@@ -16,4 +15,3 @@ Test(malloc_correctness, malloc_chunk_size_correct_after_alloc) {
     cr_assert(is_mmaped(chunk));
     cr_assert(prev_in_use(chunk));
 }
-
