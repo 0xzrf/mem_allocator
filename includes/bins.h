@@ -29,6 +29,18 @@ typedef struct bin *binptr;
 #define is_bin_empty(i)        (state_ptr->bins[i].next == state_ptr->bins[i].back)
 #define unsorted_bins()        (&state_ptr->bins[1])
 
+#define split_chunk(c, s)                                                                          \
+    do {                                                                                           \
+        size_t size_before = chunk_size((c));                                                      \
+        size_t new_chunk_size = size_before - (s);                                                 \
+        set_size((c), s);                                                                          \
+        mchunkptr new_chunk = next_chunk(c);                                                       \
+        set_size(new_chunk, new_chunk_size);                                                       \
+        set_prev_in_use(new_chunk);                                                                \
+        new_chunk->back = (c)->back;                                                               \
+        new_chunk->next = (c)->next;                                                               \
+    } while (0)
+
 #define insert_at_head(bin, i, c)                                                                  \
     do {                                                                                           \
         binptr head = &state_ptr->bin[(i)];                                                        \

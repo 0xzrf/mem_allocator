@@ -21,6 +21,37 @@ void *dl_malloc(size_t req) {
         remove_from_bin(next_free_chunk);
         return chunk2mem(next_free_chunk);
     }
+
+    /*
+        when chunks are freed, they're put on unsorted bin unconditionally(except chunks with size <
+       `MAX_FASTBIN_SIZE`), so they can be allocated directly from unsorted bin before sending them
+       back to their original bin. This is an optimization to make frequently requested allocation
+       faster. If the list doesn't have a chunk with the right size, it'll e send back(and
+       potentially coalece with )
+    */
+
+    binptr unsorted_bin = unsorted_bins();
+
+    /*
+     since every new value is put right after head
+     the last value's next chunk's next will be equal
+     to head's back
+    */
+    if (!bin_empty(unsorted_bin)) {
+        for (binptr next_chunk = unsorted_bin->next; next_chunk->next != unsorted_bin->back;
+             next_chunk = next_chunk->next) {
+            mchunkptr chunk = mem2chunk(next_chunk);
+            size_t chunk_size = chunk_size(chunk);
+
+            // if the chunk is big enough for it, return
+            if (chunk_size > aligned_req) {
+                split_chunk(chunk, aligned_req);
+            }
+            if (chunk_size == aligned_req) {
+            }
+            // else put it back to the appropriate bin and continue searching
+        }
+    }
 }
 
 void dl_free(void *ptr) {
