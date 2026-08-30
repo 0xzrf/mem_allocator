@@ -46,10 +46,13 @@ void *dl_malloc(size_t req) {
             // if the chunk is big enough for it, return
             if (chunk_size > aligned_req) {
                 split_chunk(chunk, aligned_req);
+                return chunk2mem(chunk);
             }
             if (chunk_size == aligned_req) {
+                return chunk2mem(chunk);
             }
             // else put it back to the appropriate bin and continue searching
+            insert_at_head(bins, bin_ix(chunk_size), chunk);
         }
     }
 }
