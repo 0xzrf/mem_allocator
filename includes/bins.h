@@ -14,9 +14,11 @@
 #define MIN_LARGE_SIZE    (NBINS_SMALL * MALLOC_ALIGN)
 #define MAX_FASTBIN_SIZE  80
 
+typedef bin *binptr;
+
 typedef struct {
-    mchunkptr next;
-    mchunkptr back;
+    binptr next;
+    binptr back;
 } bin;
 
 // macros
@@ -28,13 +30,13 @@ typedef struct {
 #define unsorted_bins()   (&state_ptr->bins[1])
 
 #define insert_at_head(bin, i, c)                                                                  \
-    (do {                                                                                          \
-        head = &state_ptr->bin[(i)];                                                               \
-        (c).back = head;                                                                           \
-        (c).next = head.next;                                                                      \
-        head.next.back = (c);                                                                      \
-        head.next = (c);                                                                           \
-    } while (false))
+    do {                                                                                           \
+        binptr head = &state_ptr->bin[(i)];                                                        \
+        (c)->back = head;                                                                          \
+        (c)->next = head->next;                                                                    \
+        head->back = (c)->next;                                                                    \
+        head->next = (c)->next;                                                                    \
+    } while (0)
 
 #define init_bin(bin, i) (state_ptr->bin[(i)].next = state_ptr->bin[(i)].back)
 
