@@ -25,9 +25,9 @@ typedef struct {
 // large bin not supported yet
 #define bin_ix(size) ((size) < MIN_LARGE_SIZE ? (size) / MALLOC_ALIGN : 0)
 
-#define bin_at_size(size) (state_ptr->bins[bin_ix((size))])
-#define is_bin_empty(i)   (state_ptr->bins[i].next == state_ptr->bins[i].back)
-#define unsorted_bins()   (&state_ptr->bins[1])
+#define bin_at_size(bin, size) (state_ptr->bin[bin_ix((size))])
+#define is_bin_empty(i)        (state_ptr->bins[i].next == state_ptr->bins[i].back)
+#define unsorted_bins()        (&state_ptr->bins[1])
 
 #define insert_at_head(bin, i, c)                                                                  \
     do {                                                                                           \

@@ -25,6 +25,9 @@ void dl_free(void *ptr) {
     // if < MAX_FASTBIN_SIZE, put to fastbin
     if (size <= MAX_FASTBIN_SIZE) {
         insert_at_head(fastbins, bin_ix(size), chunk);
+        set_foot(chunk, size);
+        set_prev_in_use(next_chunk(chunk));
+        return;
     }
 
     // else, put it in unsorted list
