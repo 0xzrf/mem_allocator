@@ -55,6 +55,17 @@ void *dl_malloc(size_t req) {
             insert_at_head(bins, bin_ix(chunk_size), chunk);
         }
     }
+
+    /*
+        look at small bins based on `aliged_req`. If it's empty, we will move to
+        large bins, which will be set at a logrithmic distance(where we will use bin_map)
+    */
+    if (!bin_empty(bin_at_size(bins, aligned_req))) {
+        binptr small_bin_head = &bin_at_size(bins, aligned_req);
+        mchunkptr next_free_chunk = mem2chunk(small_bin_head->next);
+        remove_from_bin(next_free_chunk);
+        return chunk2mem(next_free_chunk);
+    }
 }
 
 void dl_free(void *ptr) {
