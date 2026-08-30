@@ -15,9 +15,16 @@ void *dl_malloc(size_t req) {
     }
 
     // check fastbin, unsorted bin, small bins and then large bins. If no fit, fetch from top
+    if (aligned_req < MAX_FASTBIN_SIZE && !bin_empty(bin_at_size(fastbins, aligned_req))) {
+        binptr bin_head = &bin_at_size(fastbins, aligned_req);
+        mchunkptr next_free_chunk = mem2chunk(bin_head->next);
+        remove_from_bin(next_free_chunk);
+        return chunk2mem(next_free_chunk);
+    }
 }
 
 void dl_free(void *ptr) {
+    set_chunk_free();
     mchunkptr chunk = mem2chunk(ptr);
 
     size_t size = chunk_size(chunk);
@@ -83,6 +90,8 @@ static void *fetch_mem_from_top(size_t req) {
 
 static void init_state() {
     int i = 1;
+
+    state_ptr->max_free_bin = MAX_FASTBIN_SIZE;
 
     for (; i < NBINS; i++) {
         init_bin(bins, i);

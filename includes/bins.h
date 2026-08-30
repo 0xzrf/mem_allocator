@@ -41,10 +41,10 @@ typedef struct bin *binptr;
 #define init_bin(bin, i) (state_ptr->bin[(i)].next = state_ptr->bin[(i)].back)
 
 #define remove_from_bin(c)                                                                         \
-    (do {                                                                                          \
-        (c).next.back = (c).back;                                                                  \
-        (c).back.next = (c).next;                                                                  \
-    } while (false))
+    do {                                                                                           \
+        (c)->next->back = (c)->back;                                                               \
+        (c)->back->next = (c)->next;                                                               \
+    } while (0)
 
 #define request2size(req)                                                                          \
     ((((req) + SIZE_T + MALLOC_ALIGN_MASK) & ~MALLOC_ALIGN_MASK) < MIN_SIZE                        \

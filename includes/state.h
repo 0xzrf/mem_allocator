@@ -8,10 +8,11 @@
 #define mmap_at_offset(size)                                                                       \
     mmap((size), PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
 
-#define MAX_FREE_BIT     0x1
-#define any_bin_free()   (state_ptr->max_free_bin & MAX_FREE_BIT)
-#define top_empty()      (state_ptr->top_allocation == NULL)
-#define set_chunk_free() (state_ptr->max_free_bin = state_ptr->max_free_bin | MAX_FREE_BIT)
+#define MAX_FREE_BIT       0x1
+#define any_bin_free()     (state_ptr->max_free_bin & MAX_FREE_BIT)
+#define set_any_bin_free() (state_ptr->max_free_bin = state_ptr->max_free_bin | MAX_FREE_BIT)
+#define top_empty()        (state_ptr->top_allocation == NULL)
+#define set_chunk_free()   (state_ptr->max_free_bin = state_ptr->max_free_bin | MAX_FREE_BIT)
 
 typedef struct {
     size_t max_free_bin; // the lower bit is there to signal the presence of any free chunks in bin
