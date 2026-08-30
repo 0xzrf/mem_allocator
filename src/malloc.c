@@ -32,6 +32,13 @@ void dl_free(void *ptr) {
 
     // else, put it in unsorted list
     bin *unsorted_bins = unsorted_bins();
+
+    // coalece front and back if free
+    if (!prev_in_use(chunk)) {
+        size_t prev_size = chunk->prev_size;
+        mchunkptr prev_chunk = prev_chunk(chunk);
+        coalece(prev_chunk, chunk);
+    }
 }
 
 static void *fetch_mem_from_top(size_t req) {

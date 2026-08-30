@@ -24,10 +24,15 @@ typedef struct mem_chunk *mchunkptr;
 #define prev_in_use(c) ((c)->size & PREV_IN_USE_BIT)
 #define chunk_size(c)  ((c)->size & ~FLAG_BITS)
 #define next_chunk(c)  ((mchunkptr) ((char *) c + 2 * SIZE_T))
+#define prev_chunk(c)  ((mchunkptr) ((char *) (c) - ((c)->prev_size + 2 * SIZE_T)))
 
 #define bump_top_to_offset(t, s) ((t) = (mchunkptr) ((char *) (t) + (s) + (2 * SIZE_T)))
 
-// coalecing
+#define coalece(prev_chunk, join_chunk)                                                            \
+    do {                                                                                           \
+        prev_chunk->next = join_chunk->next;                                                       \
+        prev_chunk->size = join_chunk->size + prev_chunk->size;                                    \
+    } while (0)
 
 struct mem_chunk {
     INTERNAL_SIZE_T prev_size;
