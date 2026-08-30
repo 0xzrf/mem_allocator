@@ -20,11 +20,12 @@ typedef struct mem_chunk *mchunkptr;
 #define set_foot(c, s)     (((mchunkptr) ((char *) (c) + s + (2 * SIZE_T)))->prev_size = (s))
 
 // helper
-#define is_mmaped(c)   ((c)->size & MMAPED_BIT)
-#define prev_in_use(c) ((c)->size & PREV_IN_USE_BIT)
-#define chunk_size(c)  ((c)->size & ~FLAG_BITS)
-#define next_chunk(c)  ((mchunkptr) ((char *) c + 2 * SIZE_T))
-#define prev_chunk(c)  ((mchunkptr) ((char *) (c) - ((c)->prev_size + 2 * SIZE_T)))
+#define is_mmaped(c)       ((c)->size & MMAPED_BIT)
+#define prev_in_use(c)     ((c)->size & PREV_IN_USE_BIT)
+#define chunk_size(c)      ((c)->size & ~FLAG_BITS)
+#define next_chunk(c)      ((mchunkptr) ((char *) c + 2 * SIZE_T))
+#define prev_chunk(c)      ((mchunkptr) ((char *) (c) - ((c)->prev_size + 2 * SIZE_T)))
+#define next_chunk_free(c) (prev_in_use(next_chunk(next_chunk(c))))
 
 #define bump_top_to_offset(t, s) ((t) = (mchunkptr) ((char *) (t) + (s) + (2 * SIZE_T)))
 

@@ -35,10 +35,16 @@ void dl_free(void *ptr) {
 
     // coalece front and back if free
     if (!prev_in_use(chunk)) {
-        size_t prev_size = chunk->prev_size;
         mchunkptr prev_chunk = prev_chunk(chunk);
         coalece(prev_chunk, chunk);
+        chunk = prev_chunk;
     }
+    if (next_chunk_free(chunk)) {
+        mchunkptr next_chunk = next_chunk(chunk);
+        coalece(chunk, next_chunk);
+    }
+
+    insert_at_head(bins, 1, chunk);
 }
 
 static void *fetch_mem_from_top(size_t req) {
