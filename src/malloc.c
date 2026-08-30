@@ -24,7 +24,7 @@ void dl_free(void *ptr) {
 
     // if < MAX_FASTBIN_SIZE, put to fastbin
     if (size <= MAX_FASTBIN_SIZE) {
-        insert_at_head_freebin(bin_ix(size), chunk);
+        insert_at_head(fastbins, bin_ix(size), chunk);
     }
 
     // else, put it in unsorted list
@@ -72,9 +72,9 @@ static void init_state() {
     int i = 1;
 
     for (; i < NBINS; i++) {
-        init_bin(i);
+        init_bin(bins, i);
     }
     for (i = 1; i < MAX_FASTBIN_SIZE >> 4; i++) {
-        init_fastbin(i);
+        init_bin(fastbins, i);
     }
 }

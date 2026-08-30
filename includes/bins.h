@@ -27,26 +27,16 @@ typedef struct {
 #define is_bin_empty(i)   (state_ptr->bins[i].next == state_ptr->bins[i].back)
 #define unsorted_bins()   (&state_ptr->bins[1])
 
-#define insert_at_head(i, c)                                                                       \
+#define insert_at_head(bin, i, c)                                                                  \
     (do {                                                                                          \
-        head = &state_ptr->bins[(i)];                                                              \
+        head = &state_ptr->bin[(i)];                                                               \
         (c).back = head;                                                                           \
         (c).next = head.next;                                                                      \
         head.next.back = (c);                                                                      \
         head.next = (c);                                                                           \
     } while (false))
 
-#define insert_at_head_freebin(i, c)                                                               \
-    do {                                                                                           \
-        bin *head = &state_ptr->fastbins[(i)];                                                     \
-        (c).back = head;                                                                           \
-        (c).next = head.next;                                                                      \
-        head.next.back = (c);                                                                      \
-        head.next = (c);                                                                           \
-    } while (false)
-
-#define init_bin(i)     (state_ptr->bins[(i)].next = state_ptr->bins[(i)].back)
-#define init_fastbin(i) (state_ptr->fastbins[(i)].next = state_ptr->fastbins[(i)].back)
+#define init_bin(bin, i) (state_ptr->bin[(i)].next = state_ptr->bin[(i)].back)
 
 #define remove_from_bin(c)                                                                         \
     (do {                                                                                          \
