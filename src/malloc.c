@@ -15,7 +15,7 @@ void *dl_malloc(size_t req) {
     }
 
     // check fastbin, unsorted bin, small bins and then large bins. If no fit, fetch from top
-    if (aligned_req < MAX_FASTBIN_SIZE && !bin_empty(bin_at_size(fastbins, aligned_req))) {
+    if (aligned_req < MAX_FASTBIN_SIZE && !is_bin_empty(bins, bin_ix(aligned_req))) {
         binptr bin_head = &bin_at_size(fastbins, aligned_req);
         mchunkptr next_free_chunk = mem2chunk(bin_head->next);
         remove_from_bin(next_free_chunk);
@@ -37,7 +37,7 @@ void *dl_malloc(size_t req) {
      the last value's next chunk's next will be equal
      to head's back
     */
-    if (!bin_empty(unsorted_bin)) {
+    if (!is_bin_empty(bins, 1)) {
         for (binptr next_chunk = unsorted_bin->next; next_chunk->next != unsorted_bin->back;
              next_chunk = next_chunk->next) {
             mchunkptr chunk = mem2chunk(next_chunk);
@@ -60,7 +60,7 @@ void *dl_malloc(size_t req) {
         look at small bins based on `aliged_req`. If it's empty, we will move to
         large bins, which will be set at a logrithmic distance(where we will use bin_map)
     */
-    if (!bin_empty(bin_at_size(bins, aligned_req))) {
+    if (!is_bin_empty(bins, bin_ix(aligned_req))) {
         binptr small_bin_head = &bin_at_size(bins, aligned_req);
         mchunkptr next_free_chunk = mem2chunk(small_bin_head->next);
         remove_from_bin(next_free_chunk);
