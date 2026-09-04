@@ -76,6 +76,9 @@ void *dl_malloc(size_t req) {
 void dl_free(void *ptr) {
     set_chunk_free();
     mchunkptr chunk = mem2chunk(ptr);
+    if (is_mmaped(chunk)) {
+        unset_mmaped(chunk);
+    }
 
     size_t size = chunk_size(chunk);
 

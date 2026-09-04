@@ -22,16 +22,28 @@ Test(malloc_correctness, malloc_chunk_size_correct_after_alloc) {
     cr_assert(prev_in_use(chunk));
 }
 
-Test(free_correctness, multiple_malloc_and_free_pair_works_for_fastbins) {
+Test(malloc_free_correctness, multiple_malloc_and_free_pair_works_for_fastbins) {
     for (size_t i = 16; i <= MAX_FASTBIN_SIZE; i *= 2) {
         void *ptr = dl_malloc(i);
         dl_free(ptr);
     }
 }
 
-Test(free_correctness, multiple_malloc_and_free_pair_works_for_smallbins) {
+Test(malloc_free_correctness, multiple_malloc_and_free_pair_works_for_smallbins) {
     for (size_t i = MAX_FASTBIN_SIZE + MALLOC_ALIGN; i <= MIN_LARGE_SIZE; i *= 2) {
         void *ptr = dl_malloc(i);
         dl_free(ptr);
     }
+}
+
+Test(malloc_free_correctness, allocation_after_first_free_should_alloc_from_bins) {
+    size_t big_alloc = 150;
+    size_t smaller_alloc = 100;
+
+    void *big_alloc_ptr = dl_malloc(big_alloc);
+
+    mchunkptr big_alloc_chunk = mem2chunk(big_alloc_ptr);
+    cr_assert(is_mmaped(big_alloc_chunk));
+
+    // freeing big_alloc(which is within small_bin size) should put it in
 }
