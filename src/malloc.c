@@ -66,6 +66,11 @@ void *dl_malloc(size_t req) {
         remove_from_bin(next_free_chunk);
         return chunk2mem(next_free_chunk);
     }
+
+    /*
+        if nothing found on the bins, get it from top
+    */
+    return fetch_mem_from_top(aligned_req);
 }
 
 void dl_free(void *ptr) {
