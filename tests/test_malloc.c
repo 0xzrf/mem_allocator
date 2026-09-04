@@ -46,4 +46,12 @@ Test(malloc_free_correctness, allocation_after_first_free_should_alloc_from_bins
     cr_assert(is_mmaped(big_alloc_chunk));
 
     // freeing big_alloc(which is within small_bin size) should put it in
+    dl_free(big_alloc_ptr); // puts to unsorted_bin
+
+    void *small_alloc_ptr = dl_malloc(smaller_alloc); // should pick from small_bin set
+
+    mchunkptr small_alloc_chunk = mem2chunk(small_alloc_ptr);
+    cr_assert_eq(big_alloc_ptr, small_alloc_ptr); // if the allocation happened to the same chunk,
+                                                  // the pointers should be the same
+    cr_assert(!is_mmaped(small_alloc_chunk));
 }
