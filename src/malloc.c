@@ -37,6 +37,7 @@ void *dl_malloc(size_t req) {
      the last value's next chunk's next will be equal
      to head's back
     */
+    printf("is bin_empty: %d", !is_bin_empty(bins, 1));
     if (!is_bin_empty(bins, 1)) {
         for (binptr next_chunk = unsorted_bin->next; next_chunk->next != unsorted_bin->back;
              next_chunk = next_chunk->next) {
