@@ -46,7 +46,6 @@ typedef struct bin *binptr;
         binptr head = &state_ptr->bin[(i)];                                                        \
         (c)->back = head;                                                                          \
         (c)->next = head->next;                                                                    \
-        head->back = (c)->next;                                                                    \
         head->next = (c)->next;                                                                    \
     } while (0)
 
