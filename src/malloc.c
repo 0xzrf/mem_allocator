@@ -46,9 +46,8 @@ void *dl_malloc(size_t req) {
 
             // if the chunk is big enough for it, return
             if (chunk_size > aligned_req) {
-                       chunk_size);
-                       split_chunk(chunk, aligned_req);
-                       return chunk2mem(chunk);
+                split_chunk(chunk, aligned_req);
+                return chunk2mem(chunk);
             }
             if (chunk_size == aligned_req) {
                 return chunk2mem(chunk);
@@ -152,3 +151,11 @@ static void init_state() {
         init_bin(fastbins, i);
     }
 }
+
+#ifdef TEST
+
+void reset_mem_state() {
+    init_state();
+}
+
+#endif

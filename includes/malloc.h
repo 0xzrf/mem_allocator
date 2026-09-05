@@ -24,4 +24,10 @@ void dl_free(void *);
 static void init_state(void);
 static void *fetch_mem_from_top(size_t);
 
+#ifdef TEST
+// Test-only hooks. Compiled in by `make test` (which passes -DTEST to BOTH the
+// test binary and the objects in src/), never in a normal or release build.
+void reset_mem_state(void);
+#endif
+
 #endif

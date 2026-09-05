@@ -1,10 +1,9 @@
 # mem_allocator
 #
-#   make            build the library (debug: invariant checks ON)
-#   make test       build and run the Criterion unit tests in tests/
-#   make release    NDEBUG build (invariant checks compiled out,
-#                   Tier-0 hardening still in)
-#   make bench      run the tools/ benchmarks against this allocator
+#   make            build the library
+#   make test       build and run the Criterion unit tests (compiled with -DTEST)
+#   make release    NDEBUG build
+#   make run_script build and run test_scripts/script.c
 #   make clean
 
 CC       ?= cc
@@ -19,20 +18,38 @@ CRITERION_CFLAGS ?= $(shell $(PKG_CONFIG) --cflags criterion 2>/dev/null)
 CRITERION_LIBS   ?= $(shell $(PKG_CONFIG) --libs criterion 2>/dev/null || echo -lcriterion)
 
 SRC      := $(wildcard src/*.c)
-OBJ      := $(SRC:src/%.c=build/%.o)
-LIB      := build/libmem.a
-
 TEST_SRC := $(wildcard tests/test_*.c)
+
+# Objects live in a per-variant directory. Without this, `make` and `make test`
+# would share build/*.o -- and since make only compares timestamps, switching
+# between them would silently reuse objects built with the WRONG flags.
+OBJDIR   := build/obj
+TOBJDIR  := build/obj-test
+OBJ      := $(SRC:src/%.c=$(OBJDIR)/%.o)
+TOBJ     := $(SRC:src/%.c=$(TOBJDIR)/%.o)
+LIB      := build/libmem.a
 TESTS    := $(TEST_SRC:tests/%.c=build/%)
 
-.PHONY: all test release bench clean
+TESTFLAGS := -DTEST
+
+.PHONY: all test release run_script clean
+
+# Objects reached only through a pattern-rule chain are treated as intermediate
+# files and deleted after the build, forcing a full recompile every time.
+.SECONDARY: $(OBJ) $(TOBJ)
+
 all: $(LIB)
 
-build:
-	@mkdir -p build
+build $(OBJDIR) $(TOBJDIR):
+	@mkdir -p $@
 
-build/%.o: src/%.c | build
+# ---- normal objects -------------------------------------------------------
+$(OBJDIR)/%.o: src/%.c | $(OBJDIR)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
+
+# ---- test objects: same sources, built with -DTEST ------------------------
+$(TOBJDIR)/%.o: src/%.c | $(TOBJDIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(TESTFLAGS) -c -o $@ $<
 
 $(LIB): $(OBJ) | build
 ifeq ($(strip $(SRC)),)
@@ -42,9 +59,11 @@ else
 	@echo "built $@"
 endif
 
-# Tests link the objects directly so they work before src/ has anything in it.
-build/test_%: tests/test_%.c $(OBJ) | build
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(CRITERION_CFLAGS) -o $@ $< $(OBJ) $(LDFLAGS) $(CRITERION_LIBS)
+# The test binary AND the objects it links are both built with -DTEST, so
+# test-only hooks like reset_mem_state() are visible on both sides.
+build/test_%: tests/test_%.c $(TOBJ) | build
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(TESTFLAGS) $(CRITERION_CFLAGS) \
+	      -o $@ $< $(TOBJ) $(LDFLAGS) $(CRITERION_LIBS)
 
 test: $(TESTS)
 ifeq ($(strip $(TEST_SRC)),)
@@ -56,12 +75,9 @@ endif
 release: CFLAGS += -O2 -DNDEBUG
 release: clean $(LIB)
 
-bench:
-	@$(MAKE) -C tools ALLOC=mine all
-	@./tools/bin/mine/bench_phases ramp   # M1 has no free(); ramp only
+run_script: | build
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o build/script test_scripts/script.c $(SRC)
+	@./build/script
 
 clean:
 	@rm -rf build
-
-run_script:
-	cc -std=c11 -Iincludes -g -O1 -o build/script test_scripts/script.c src/*.c && ./build/script
