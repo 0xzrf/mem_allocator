@@ -42,6 +42,7 @@ void *dl_malloc(size_t req) {
     if (!is_bin_empty(bins, UNSORTED_BIN_IDX)) {
         for (binptr next_chunk = unsorted_bin->next; next_chunk->next != unsorted_bin->back;
              next_chunk = next_chunk->next) {
+            printf("ran an iter\n");
             mchunkptr chunk = mem2chunk(next_chunk);
             size_t chunk_size = chunk_size(chunk);
 
