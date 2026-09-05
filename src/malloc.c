@@ -77,9 +77,6 @@ void *dl_malloc(size_t req) {
 void dl_free(void *ptr) {
     set_chunk_free();
     mchunkptr chunk = mem2chunk(ptr);
-    if (is_mmaped(chunk)) {
-        unset_mmaped(chunk);
-    }
 
     size_t size = chunk_size(chunk);
 
@@ -132,7 +129,6 @@ static void *fetch_mem_from_top(size_t req) {
 
     set_size(user_data, req);
     set_prev_in_use(user_data);
-    set_mmaped(user_data);
 
     bump_top_to_offset(ta, req);
     set_size(ta, ts - req);
