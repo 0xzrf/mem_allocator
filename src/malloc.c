@@ -40,12 +40,12 @@ void *dl_malloc(size_t req) {
 
     printf("unsorted bin empty: %d\n", !is_bin_empty(bins, 1));
     if (!is_bin_empty(bins, UNSORTED_BIN_IDX)) {
-        for (binptr next_chunk = unsorted_bin->next; next_chunk->next != unsorted_bin->back;
+        for (binptr next_chunk = unsorted_bin->next; next_chunk != unsorted_bin->back;
              next_chunk = next_chunk->next) {
-            printf("ran an iter\n");
             mchunkptr chunk = mem2chunk(next_chunk);
             size_t chunk_size = chunk_size(chunk);
 
+            printf("got the chunk info: %zu\n", chunk_size);
             // if the chunk is big enough for it, return
             if (chunk_size > aligned_req) {
                 printf("inserting from unsorted bin: req_size: %zu, found_size: %zu\n", aligned_req,
@@ -59,6 +59,7 @@ void *dl_malloc(size_t req) {
                 return chunk2mem(chunk);
             }
 
+            printf("didn't find a sufficient match\n");
             remove_from_bin(chunk);
             // else put it back to the appropriate bin and continue searching
             insert_at_head(bins, bin_ix(chunk_size), chunk);

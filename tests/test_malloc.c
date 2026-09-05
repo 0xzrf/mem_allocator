@@ -43,7 +43,9 @@ Test(malloc_free_correctness, allocation_after_first_free_should_alloc_from_bins
 
     mchunkptr big_alloc_chunk = mem2chunk(big_alloc_ptr);
 
-    // freeing big_alloc(which is within small_bin size) should put it in
+    cr_assert_eq(chunk_size(big_alloc_chunk), request2size(big_alloc));
+
+    // freeing big_alloc(which is within small_bin size) should put it in unsorted bin
     dl_free(big_alloc_ptr); // puts to unsorted_bin
 
     void *small_alloc_ptr = dl_malloc(smaller_alloc); // should pick from small_bin set
