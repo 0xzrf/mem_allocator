@@ -47,10 +47,12 @@ typedef struct bin *binptr;
         binptr head = &state_ptr->bin[(i)];                                                        \
         (c)->back = head;                                                                          \
         (c)->next = head->next;                                                                    \
-        head->next = (binptr) (chunk2mem(c));                                                      \
+        head->next = (binptr) (chunk2mem((c)));                                                    \
+        head->next->back = (bin_ptr) (chunk2mem((c)))                                              \
     } while (0)
 
-#define init_bin(bin, i) (state_ptr->bin[(i)].next = state_ptr->bin[(i)].back)
+#define init_bin(bin, i)                                                                           \
+    (state_ptr->bin[(i)].next = state_ptr->bin[(i)].back = &state_ptr->bin[(i)])
 
 #define remove_from_bin(c)                                                                         \
     do {                                                                                           \

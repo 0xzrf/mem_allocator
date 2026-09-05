@@ -8,6 +8,7 @@ void *dl_malloc(size_t req) {
 
     // this needs to be called whenever no free bin
     if (!any_bin_free()) {
+        printf("no chunk free, returning from top\n");
         if (top_empty()) {
             init_state();
         }
@@ -41,6 +42,7 @@ void *dl_malloc(size_t req) {
     if (!is_bin_empty(bins, UNSORTED_BIN_IDX)) {
         for (binptr next_chunk = unsorted_bin->next; next_chunk != unsorted_bin->back;
              next_chunk = next_chunk->next) {
+            printf("running the unsorted bin iter\n");
             mchunkptr chunk = mem2chunk(next_chunk);
             size_t chunk_size = chunk_size(chunk);
 
@@ -53,9 +55,12 @@ void *dl_malloc(size_t req) {
                 return chunk2mem(chunk);
             }
 
+            printf("putting back to their real bins\n");
             remove_from_bin(chunk);
+            printf("remove_from_bin works \n");
             // else put it back to the appropriate bin and continue searching
             insert_at_head(bins, bin_ix(chunk_size), chunk);
+            printf("insert_at_head also works fine\n");
         }
     }
 
@@ -63,6 +68,7 @@ void *dl_malloc(size_t req) {
         look at small bins based on `aliged_req`. If it's empty, we will move to
         large bins, which will be set at a logrithmic distance(where we will use bin_map)
     */
+    printf("checking specific bin\n");
     if (!is_bin_empty(bins, bin_ix(aligned_req))) {
         binptr small_bin_head = &bin_at_size(bins, aligned_req);
         mchunkptr next_free_chunk = mem2chunk(small_bin_head->next);
@@ -73,6 +79,7 @@ void *dl_malloc(size_t req) {
     /*
         if nothing found on the bins, get it from top
     */
+    printf("checking top\n");
     return fetch_mem_from_top(aligned_req);
 }
 
@@ -104,6 +111,7 @@ void dl_free(void *ptr) {
 }
 
 static void *fetch_mem_from_top(size_t req) {
+    printf("fetching from top\n");
     void *return_mem;
     mchunkptr ta = state_ptr->top_allocation;
     INTERNAL_SIZE_T ts;
@@ -155,6 +163,7 @@ static void init_state() {
 #ifdef TEST
 
 void reset_mem_state() {
+    state_ptr->top_allocation = NULL;
     init_state();
 }
 
