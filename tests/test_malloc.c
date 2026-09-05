@@ -55,7 +55,7 @@ Test(malloc_free_correctness, allocation_after_first_free_should_alloc_from_bins
 }
 
 Test(malloc_free_correctness, multiple_malloc_and_free_pair_works_for_smallbins) {
-    for (size_t i = MAX_FASTBIN_SIZE + MALLOC_ALIGN; i <= MIN_LARGE_SIZE; i *= 2) {
+    for (size_t i = MAX_FASTBIN_SIZE + MALLOC_ALIGN; i <= MIN_LARGE_SIZE; i += MALLOC_ALIGN) {
         printf("running malloc pair for %zu\n", i);
         void *ptr = dl_malloc(i);
         printf("malloc passed for %zu\n", i);

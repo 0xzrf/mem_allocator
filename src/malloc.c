@@ -91,6 +91,7 @@ void dl_free(void *ptr) {
     mchunkptr chunk = mem2chunk(ptr);
 
     size_t size = chunk_size(chunk);
+    printf("size for free: %zu\n", size);
 
     // if < MAX_FASTBIN_SIZE, put to fastbin
     if (size <= MAX_FASTBIN_SIZE) {
@@ -135,6 +136,9 @@ static void *fetch_mem_from_top(size_t req) {
         if (return_mem == MAP_FAILED) {
             panic("invalid memory");
         }
+    } else {
+        return_mem = ta;
+        ts = chunk_size(ta);
     }
 
     mchunkptr user_data = (mchunkptr) return_mem;
