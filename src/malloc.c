@@ -40,8 +40,9 @@ void *dl_malloc(size_t req) {
     */
 
     if (!is_bin_empty(bins, UNSORTED_BIN_IDX)) {
-        for (binptr next_chunk = unsorted_bin->next; next_chunk != unsorted_bin->back;
-             next_chunk = next_chunk->next) {
+        binptr next_chunk = unsorted_bin->next;
+        while (next_chunk != unsorted_bin) {
+            binptr nxt = next_chunk->next;
             printf("running the unsorted bin iter\n");
             mchunkptr chunk = mem2chunk(next_chunk);
             size_t chunk_size = chunk_size(chunk);
@@ -61,6 +62,8 @@ void *dl_malloc(size_t req) {
             // else put it back to the appropriate bin and continue searching
             insert_at_head(bins, bin_ix(chunk_size), chunk);
             printf("insert_at_head also works fine\n");
+
+            next_chunk = nxt;
         }
     }
 
@@ -155,7 +158,7 @@ static void init_state() {
     for (; i < NBINS; i++) {
         init_bin(bins, i);
     }
-    for (i = 1; i < MAX_FASTBIN_SIZE >> 4; i++) {
+    for (i = 1; i <= MAX_FASTBIN_SIZE >> 4; i++) {
         init_bin(fastbins, i);
     }
 }

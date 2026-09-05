@@ -27,7 +27,7 @@ typedef struct bin *binptr;
 #define bin_ix(size) ((size) < MIN_LARGE_SIZE ? (size) / MALLOC_ALIGN : 0)
 
 #define bin_at_size(bin, size) (state_ptr->bin[bin_ix((size))])
-#define is_bin_empty(bin, i)   (state_ptr->bin[i].next == state_ptr->bins[i].back)
+#define is_bin_empty(bin, i)   (state_ptr->bin[(i)].next == &state_ptr->bin[(i)])
 #define unsorted_bins()        (&state_ptr->bins[1])
 
 #define split_chunk(c, s)                                                                          \
@@ -48,7 +48,7 @@ typedef struct bin *binptr;
         (c)->back = head;                                                                          \
         (c)->next = head->next;                                                                    \
         head->next = (binptr) (chunk2mem((c)));                                                    \
-        head->next->back = (bin_ptr) (chunk2mem((c)))                                              \
+        head->next->back = (binptr) (chunk2mem((c)));                                              \
     } while (0)
 
 #define init_bin(bin, i)                                                                           \
