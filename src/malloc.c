@@ -37,8 +37,9 @@ void *dl_malloc(size_t req) {
      the last value's next chunk's next will be equal
      to head's back
     */
-    printf("is bin_empty: %d\n", !is_bin_empty(bins, 1));
-    if (!is_bin_empty(bins, 1)) {
+
+    printf("unsorted bin empty: %d\n", !is_bin_empty(bins, 1));
+    if (!is_bin_empty(bins, UNSORTED_BIN_IDX)) {
         for (binptr next_chunk = unsorted_bin->next; next_chunk->next != unsorted_bin->back;
              next_chunk = next_chunk->next) {
             mchunkptr chunk = mem2chunk(next_chunk);
@@ -46,12 +47,18 @@ void *dl_malloc(size_t req) {
 
             // if the chunk is big enough for it, return
             if (chunk_size > aligned_req) {
+                printf("inserting from unsorted bin: req_size: %zu, found_size: %zu\n", aligned_req,
+                       chunk_size);
                 split_chunk(chunk, aligned_req);
                 return chunk2mem(chunk);
             }
             if (chunk_size == aligned_req) {
+                printf("inserting from unsorted bin with equal size: req_size: %zu\n", aligned_req,
+                       chunk_size);
                 return chunk2mem(chunk);
             }
+
+            remove_from_bin(chunk);
             // else put it back to the appropriate bin and continue searching
             insert_at_head(bins, bin_ix(chunk_size), chunk);
         }
@@ -62,6 +69,7 @@ void *dl_malloc(size_t req) {
         large bins, which will be set at a logrithmic distance(where we will use bin_map)
     */
     if (!is_bin_empty(bins, bin_ix(aligned_req))) {
+        printf("found exact fit in small bin\n");
         binptr small_bin_head = &bin_at_size(bins, aligned_req);
         mchunkptr next_free_chunk = mem2chunk(small_bin_head->next);
         remove_from_bin(next_free_chunk);
@@ -71,6 +79,7 @@ void *dl_malloc(size_t req) {
     /*
         if nothing found on the bins, get it from top
     */
+    printf("returning from top\n");
     return fetch_mem_from_top(aligned_req);
 }
 
@@ -82,6 +91,7 @@ void dl_free(void *ptr) {
 
     // if < MAX_FASTBIN_SIZE, put to fastbin
     if (size <= MAX_FASTBIN_SIZE) {
+        printf("inserting in fastbin\n");
         insert_at_head(fastbins, bin_ix(size), chunk);
         set_foot(chunk, size);
         set_prev_in_use(next_chunk(chunk));
@@ -98,8 +108,8 @@ void dl_free(void *ptr) {
         mchunkptr next_chunk = next_chunk(chunk);
         coalece(chunk, next_chunk);
     }
-
-    insert_at_head(bins, 1, chunk);
+    printf("inserting to unsorted bin\n");
+    insert_at_head(bins, UNSORTED_BIN_IDX, chunk);
 }
 
 static void *fetch_mem_from_top(size_t req) {

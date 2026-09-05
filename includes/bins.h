@@ -13,6 +13,7 @@
 #define NBINS             (NBINS_SMALL + NBINS_LARGE)
 #define MIN_LARGE_SIZE    (NBINS_SMALL * MALLOC_ALIGN)
 #define MAX_FASTBIN_SIZE  80
+#define UNSORTED_BIN_IDX  1
 
 typedef struct bin {
     struct bin *next;
@@ -46,7 +47,7 @@ typedef struct bin *binptr;
         binptr head = &state_ptr->bin[(i)];                                                        \
         (c)->back = head;                                                                          \
         (c)->next = head->next;                                                                    \
-        head->next = (c)->next;                                                                    \
+        head->next = (binptr) (chunk2mem(c));                                                      \
     } while (0)
 
 #define init_bin(bin, i) (state_ptr->bin[(i)].next = state_ptr->bin[(i)].back)
