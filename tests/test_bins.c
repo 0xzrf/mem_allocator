@@ -34,7 +34,6 @@ Test(bin_correctness, bins_point_at_the_right_free_chunks) {
         // every second chunk free(2nd and 4th)
         if ((i + 1) % 2 == 0) {
             set_foot(c, MALLOC_ALIGN);
-            unset_prev_in_use(next_chunk(c));
             set_prev_in_use(c); // set the 1st and 3rd as allocated
 
             insert_at_head(fastbins, bin_ix(MALLOC_ALIGN), c);
@@ -46,8 +45,8 @@ Test(bin_correctness, bins_point_at_the_right_free_chunks) {
 
     binptr next_chunk = bin_at_m_align->next;
 
-    for (size_t i = 1; i < 5; i *= 2) {
-        cr_assert_eq(&chunks[i], mem2chunk(next_chunk));
-        next_chunk = next_chunk->next;
-    }
+    cr_assert_eq(&chunks[3], mem2chunk(next_chunk));
+    next_chunk = next_chunk->next;
+    cr_assert_eq(&chunks[1], mem2chunk(next_chunk));
+    next_chunk = next_chunk->next;
 }
