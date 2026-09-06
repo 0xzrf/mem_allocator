@@ -117,7 +117,7 @@ Test(bin_correctness, forward_and_backward_walks_agree) {
     // head insertion is LIFO: last in comes out first
     mchunkptr fwd[N];
     size_t n = 0;
-    for (binptr p = head->next; p != head && n < N; p = p->next)
+    for (binptr p = head->next; p != head; p = p->next)
         fwd[n++] = mem2chunk(p);
     cr_assert_eq(n, N, "forward walk found %zu chunks, expected %d", n, N);
     cr_assert_eq(fwd[0], &chunks[2]);
@@ -127,7 +127,7 @@ Test(bin_correctness, forward_and_backward_walks_agree) {
     // walking back from the head must produce the exact reverse
     mchunkptr bwd[N];
     n = 0;
-    for (binptr p = head->back; p != head && n < N; p = p->back)
+    for (binptr p = head->back; p != head; p = p->back)
         bwd[n++] = mem2chunk(p);
     cr_assert_eq(n, N, "backward walk found %zu chunks, expected %d", n, N);
     for (size_t i = 0; i < N; i++)

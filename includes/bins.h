@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "chunk.h"
+// this is the MIN_SIZE for the mem_chunk struct
 #define MIN_SIZE          32
 #define MALLOC_ALIGN      (SIZE_T * 2)
 #define MALLOC_ALIGN_MASK (MALLOC_ALIGN - 1)
@@ -48,8 +49,8 @@ typedef struct bin *binptr;
         binptr head = &state_ptr->bin[(i)];                                                        \
         (c)->back = head;                                                                          \
         (c)->next = head->next;                                                                    \
-        head->next = (binptr) (chunk2mem((c)));                                                    \
         head->next->back = (binptr) (chunk2mem((c)));                                              \
+        head->next = (binptr) (chunk2mem((c)));                                                    \
     } while (0)
 
 #define init_bin(bin, i)                                                                           \
