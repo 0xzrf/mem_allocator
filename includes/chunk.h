@@ -20,7 +20,7 @@ typedef struct mem_chunk *mchunkptr;
 // helper
 #define prev_in_use(c)     ((c)->size & PREV_IN_USE_BIT)
 #define chunk_size(c)      ((c)->size & ~FLAG_BITS)
-#define next_chunk(c)      ((mchunkptr) ((char *) c + 2 * SIZE_T))
+#define next_chunk(c)      ((mchunkptr) ((char *) (c) + ((c)->size + 2 * SIZE_T)))
 #define prev_chunk(c)      ((mchunkptr) ((char *) (c) - ((c)->prev_size + 2 * SIZE_T)))
 #define next_chunk_free(c) (prev_in_use(next_chunk(next_chunk(c))))
 

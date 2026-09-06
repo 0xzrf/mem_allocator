@@ -111,6 +111,10 @@ void dl_free(void *ptr) {
         mchunkptr next_chunk = next_chunk(chunk);
         coalece(chunk, next_chunk);
     }
+
+    set_foot(chunk, size);
+    set_prev_in_use(next_chunk(chunk));
+
     insert_at_head(bins, UNSORTED_BIN_IDX, chunk);
 }
 
