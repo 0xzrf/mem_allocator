@@ -13,9 +13,10 @@ typedef struct mem_chunk *mchunkptr;
 #define FLAG_BITS       (PREV_IN_USE_BIT)
 
 // setters
-#define set_size(p, s)     ((p)->size = ((p)->size & FLAG_BITS) | (s))
-#define set_prev_in_use(p) ((p)->size = (p)->size | PREV_IN_USE_BIT)
-#define set_foot(c, s)     (((mchunkptr) ((char *) (c) + s + (2 * SIZE_T)))->prev_size = (s))
+#define set_size(p, s)       ((p)->size = ((p)->size & FLAG_BITS) | (s))
+#define set_prev_in_use(p)   ((p)->size = (p)->size | PREV_IN_USE_BIT)
+#define unset_prev_in_use(p) ((p)->size = (p)->size & ~PREV_IN_USE_BIT)
+#define set_foot(c, s)       (((mchunkptr) ((char *) (c) + s + (2 * SIZE_T)))->prev_size = (s))
 
 // helper
 #define prev_in_use(c)     ((c)->size & PREV_IN_USE_BIT)
@@ -23,8 +24,6 @@ typedef struct mem_chunk *mchunkptr;
 #define next_chunk(c)      ((mchunkptr) ((char *) (c) + (chunk_size(c) + 2 * SIZE_T)))
 #define prev_chunk(c)      ((mchunkptr) ((char *) (c) - ((c)->prev_size + 2 * SIZE_T)))
 #define next_chunk_free(c) (!prev_in_use(next_chunk(next_chunk(c))))
-
-#define bump_top_to_offset(t, s) ((t) = (mchunkptr) ((char *) (t) + (s) + (2 * SIZE_T)))
 
 #define coalece(prev_chunk, join_chunk)                                                            \
     do {                                                                                           \

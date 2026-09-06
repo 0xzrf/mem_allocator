@@ -97,7 +97,7 @@ void dl_free(void *ptr) {
     if (size <= MAX_FASTBIN_SIZE) {
         insert_at_head(fastbins, bin_ix(size), chunk);
         set_foot(chunk, size);
-        set_prev_in_use(next_chunk(chunk));
+        unset_prev_in_use(next_chunk(chunk));
         return;
     }
 
@@ -113,7 +113,7 @@ void dl_free(void *ptr) {
     }
 
     set_foot(chunk, size);
-    set_prev_in_use(next_chunk(chunk));
+    unset_prev_in_use(next_chunk(chunk));
 
     insert_at_head(bins, UNSORTED_BIN_IDX, chunk);
 }
