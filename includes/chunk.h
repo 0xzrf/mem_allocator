@@ -13,7 +13,7 @@ typedef struct mem_chunk *mchunkptr;
 #define FLAG_BITS       (PREV_IN_USE_BIT)
 
 // setters
-#define set_size(p, s)     ((p)->size = (s))
+#define set_size(p, s)     ((p)->size = (s) & ((p)->size | FLAG_BITS))
 #define set_prev_in_use(p) ((p)->size = (p)->size | PREV_IN_USE_BIT)
 #define set_foot(c, s)     (((mchunkptr) ((char *) (c) + s + (2 * SIZE_T)))->prev_size = (s))
 
