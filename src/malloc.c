@@ -43,7 +43,6 @@ void *dl_malloc(size_t req) {
         binptr next_chunk = unsorted_bin->next;
         while (next_chunk != unsorted_bin) {
             binptr nxt = next_chunk->next;
-            printf("running the unsorted bin iter\n");
             mchunkptr chunk = mem2chunk(next_chunk);
             size_t chunk_size = chunk_size(chunk);
 
@@ -56,12 +55,9 @@ void *dl_malloc(size_t req) {
                 return chunk2mem(chunk);
             }
 
-            printf("putting back to their real bins\n");
             remove_from_bin(chunk);
-            printf("remove_from_bin works \n");
             // else put it back to the appropriate bin and continue searching
             insert_at_head(bins, bin_ix(chunk_size), chunk);
-            printf("insert_at_head also works fine\n");
 
             next_chunk = nxt;
         }
@@ -71,7 +67,6 @@ void *dl_malloc(size_t req) {
         look at small bins based on `aliged_req`. If it's empty, we will move to
         large bins, which will be set at a logrithmic distance(where we will use bin_map)
     */
-    printf("checking specific bin\n");
     if (!is_bin_empty(bins, bin_ix(aligned_req))) {
         binptr small_bin_head = &bin_at_size(bins, aligned_req);
         mchunkptr next_free_chunk = mem2chunk(small_bin_head->next);
@@ -82,7 +77,7 @@ void *dl_malloc(size_t req) {
     /*
         if nothing found on the bins, get it from top
     */
-    printf("checking top\n");
+    printf("no bins are sufficient, imma put from top\n");
     return fetch_mem_from_top(aligned_req);
 }
 
@@ -91,9 +86,9 @@ void dl_free(void *ptr) {
     mchunkptr chunk = mem2chunk(ptr);
 
     size_t size = chunk_size(chunk);
-    printf("size for free: %zu\n", size);
 
-    // if < MAX_FASTBIN_SIZE, put to fastbin
+    printf("freeing size %zu\n", size);
+
     if (size <= MAX_FASTBIN_SIZE) {
         insert_at_head(fastbins, bin_ix(size), chunk);
         set_foot(chunk, size);
@@ -101,25 +96,34 @@ void dl_free(void *ptr) {
         return;
     }
 
+    printf("putting to unsorted bin\n");
     // coalece front and back if free
+    // 1. somehow, the bit after set_foot is not preserved here, hence, no backward coalecing on 128
     if (!prev_in_use(chunk)) {
+        printf("prev chunk not in use, backward coalecing\n");
         mchunkptr prev_chunk = prev_chunk(chunk);
         coalece(prev_chunk, chunk);
         chunk = prev_chunk;
     }
-    if (next_chunk_free(chunk)) {
+    // need to check if the next chunk is top(mmaped)
+    if (!is_mmaped(next_chunk(chunk)) && next_chunk_free(chunk)) {
+        printf("next chunk not in allocated, forward coalecing\n");
         mchunkptr next_chunk = next_chunk(chunk);
         coalece(chunk, next_chunk);
     }
 
+    printf("setting foot\n");
     set_foot(chunk, size);
-    unset_prev_in_use(next_chunk(chunk));
+    printf("fetching next chunk\n");
+    mchunkptr next_chunk = next_chunk(chunk);
+    printf("unsetting prev in use in the next chunk, next chunk size: %zu\n", next_chunk->size);
+    unset_prev_in_use(next_chunk);
 
+    printf("inserting to head\n");
     insert_at_head(bins, UNSORTED_BIN_IDX, chunk);
 }
 
 static void *fetch_mem_from_top(size_t req) {
-    printf("fetching from top\n");
     void *return_mem;
     mchunkptr ta = state_ptr->top_allocation;
     INTERNAL_SIZE_T ts;
@@ -149,9 +153,13 @@ static void *fetch_mem_from_top(size_t req) {
 
     set_size(user_data, req);
     set_prev_in_use(user_data);
+    if (is_mmaped(user_data)) {
+        unset_mmaped(user_data);
+    }
 
     bump_top_to_offset(ta, req);
     set_size(ta, ts - req);
+    set_mmaped(ta);
 
     state_ptr->top_allocation = ta;
 

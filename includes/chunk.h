@@ -10,6 +10,7 @@ typedef struct mem_chunk *mchunkptr;
 #define mem2chunk(m) ((void *) ((char *) m - 2 * SIZE_T))
 
 #define PREV_IN_USE_BIT 0x1
+#define MMAPED_BIT      0x2
 #define FLAG_BITS       (PREV_IN_USE_BIT)
 
 // setters
@@ -17,8 +18,11 @@ typedef struct mem_chunk *mchunkptr;
 #define set_prev_in_use(p)   ((p)->size = (p)->size | PREV_IN_USE_BIT)
 #define unset_prev_in_use(p) ((p)->size = (p)->size & ~PREV_IN_USE_BIT)
 #define set_foot(c, s)       (((mchunkptr) ((char *) (c) + s + (2 * SIZE_T)))->prev_size = (s))
+#define set_mmaped(c)        ((c)->size = (c)->size | MMAPED_BIT)
+#define unset_mmaped(c)      ((c)->size = (c)->size & ~MMAPED_BIT)
 
 // helper
+#define is_mmaped(c)       ((c)->size & MMAPED_BIT)
 #define prev_in_use(c)     ((c)->size & PREV_IN_USE_BIT)
 #define chunk_size(c)      ((c)->size & ~FLAG_BITS)
 #define next_chunk(c)      ((mchunkptr) ((char *) (c) + (chunk_size(c) + 2 * SIZE_T)))

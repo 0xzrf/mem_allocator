@@ -54,14 +54,19 @@
 //     reset_mem_state();
 // }
 
-// Test(malloc_free_correctness, multiple_malloc_and_free_pair_works_for_smallbins) {
-//     for (size_t i = MAX_FASTBIN_SIZE + MALLOC_ALIGN; i <= MIN_LARGE_SIZE; i += MALLOC_ALIGN) {
-//         printf("running malloc pair for %zu\n", i);
-//         void *ptr = dl_malloc(i);
-//         printf("malloc passed for %zu\n", i);
-//         dl_free(ptr);
-//         printf("free passed for %zu\n", i);
-//     }
+Test(malloc_free_correctness, multiple_malloc_and_free_pair_works_for_smallbins) {
+    printf("---------------------------------------------------------------------------------------"
+           "---------------------\n");
+    for (size_t i = MAX_FASTBIN_SIZE + MALLOC_ALIGN; i < MIN_LARGE_SIZE; i += MALLOC_ALIGN) {
+        printf("-----------------------------------------------------------------------------------"
+               "\n");
+        printf("running malloc pair for %zu\n", request2size(i));
+        void *ptr = dl_malloc(i);
 
-//     reset_mem_state();
-// }
+        printf("malloc passed for %zu\n", request2size(i));
+        dl_free(ptr);
+        printf("free passed for %zu\n", request2size(i));
+    }
+
+    reset_mem_state();
+}
