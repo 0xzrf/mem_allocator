@@ -51,11 +51,9 @@ Test(bin_correctness, bins_point_at_the_right_free_chunks) {
     next_chunk = next_chunk->next;
 }
 
-#define TEST_NFASTBINS ((MAX_FASTBIN_SIZE / MALLOC_ALIGN) + 1)
-
 struct test_state {
     bin bins[NBINS];
-    bin fastbins[TEST_NFASTBINS];
+    bin fastbins[NFASTBIN];
 };
 
 #define SETUP_BINS()                                                                               \
@@ -63,7 +61,7 @@ struct test_state {
     struct test_state *state_ptr = &mem_state_;                                                    \
     for (size_t i_ = 0; i_ < NBINS; i_++)                                                          \
         init_bin(bins, i_);                                                                        \
-    for (size_t i_ = 0; i_ < TEST_NFASTBINS; i_++)                                                 \
+    for (size_t i_ = 0; i_ < NFASTBIN; i_++)                                                       \
     init_bin(fastbins, i_)
 
 static void make_chunks(struct mem_chunk *c, size_t n, size_t size) {
@@ -84,7 +82,7 @@ Test(bin_correctness, fresh_bins_are_empty_rings) {
         cr_assert_eq(state_ptr->bins[i].back, &state_ptr->bins[i],
                      "bins[%zu].back must point at itself", i);
     }
-    for (size_t i = 0; i < TEST_NFASTBINS; i++)
+    for (size_t i = 0; i < NFASTBIN; i++)
         cr_assert(is_bin_empty(fastbins, i), "fastbins[%zu] not empty after init", i);
 }
 
@@ -192,5 +190,5 @@ Test(bin_correctness, bin_ix_is_in_range_and_monotonic) {
         prev = ix;
     }
     for (size_t sz = MIN_SIZE; sz <= MAX_FASTBIN_SIZE; sz += MALLOC_ALIGN)
-        cr_assert_lt(bin_ix(sz), TEST_NFASTBINS, "bin_ix(%zu) overflows fastbins[]", sz);
+        cr_assert_lt(bin_ix(sz), NFASTBIN, "bin_ix(%zu) overflows fastbins[]", sz);
 }

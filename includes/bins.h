@@ -13,6 +13,7 @@
 #define NBINS             (NBINS_SMALL + NBINS_LARGE)
 #define MIN_LARGE_SIZE    (NBINS_SMALL * MALLOC_ALIGN)
 #define MAX_FASTBIN_SIZE  80
+#define NFASTBIN          ((MAX_FASTBIN_SIZE >> 4) + 1)
 #define UNSORTED_BIN_IDX  1
 
 typedef struct bin {

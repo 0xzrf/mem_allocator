@@ -166,7 +166,7 @@ static void init_state() {
     for (; i < NBINS; i++) {
         init_bin(bins, i);
     }
-    for (i = 1; i <= MAX_FASTBIN_SIZE >> 4; i++) {
+    for (i = 1; i <= NFASTBIN; i++) {
         init_bin(fastbins, i);
     }
 }
