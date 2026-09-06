@@ -43,7 +43,7 @@ Test(chunk_ops, next_chunk_identifies_prev_chunk_free) {
 }
 
 Test(chunk_ops, next_chunk_free_test) {
-    struct mem_chunk c[2] = {{
+    struct mem_chunk c[3] = {{
                                  prev_size : 0,
                                  size : 16,
                                  next : NULL,
@@ -63,4 +63,25 @@ Test(chunk_ops, next_chunk_free_test) {
 
     cr_assert(
         !next_chunk_free(chunk1)); // checking to see if 2nd chunk is in use(which it is) via chunk1
+}
+
+Test(chunk_ops, next_and_prev_chunk_are_inverses) {
+    struct mem_chunk c[3] = {0};
+    c[0].size = 48;
+    c[1].size = 64;
+    c[2].size = 32;
+
+    mchunkptr a = &c[0];
+    mchunkptr b = next_chunk(a);
+    set_foot(a, chunk_size(a)); // prev_chunk needs the footer
+
+    cr_assert_eq(prev_chunk(b), a);
+    cr_assert_eq(next_chunk(prev_chunk(b)), b);
+}
+
+Test(chunk_ops, chunk2mem_and_mem2chunk_are_inverses) {
+    struct mem_chunk c = {0};
+    void *m = chunk2mem(&c);
+    cr_assert_eq((mchunkptr) mem2chunk(m), &c);
+    cr_assert_eq((char *) m - (char *) &c, 2 * SIZE_T);
 }
