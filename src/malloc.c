@@ -8,7 +8,6 @@ void *dl_malloc(size_t req) {
 
     // this needs to be called whenever no free bin
     if (!any_bin_free()) {
-        printf("no chunk free, returning from top\n");
         if (top_empty()) {
             init_state();
         }
@@ -38,7 +37,6 @@ void *dl_malloc(size_t req) {
      the last value's next chunk's next will be equal
      to head's back
     */
-
     if (!is_bin_empty(bins, UNSORTED_BIN_IDX)) {
         binptr next_chunk = unsorted_bin->next;
         while (next_chunk != unsorted_bin) {
@@ -77,7 +75,6 @@ void *dl_malloc(size_t req) {
     /*
         if nothing found on the bins, get it from top
     */
-    printf("no bins are sufficient, imma put from top\n");
     return fetch_mem_from_top(aligned_req);
 }
 
@@ -87,8 +84,6 @@ void dl_free(void *ptr) {
 
     size_t size = chunk_size(chunk);
 
-    printf("freeing size %zu\n", size);
-
     if (size <= MAX_FASTBIN_SIZE) {
         insert_at_head(fastbins, bin_ix(size), chunk);
         set_foot(chunk, size);
@@ -96,30 +91,23 @@ void dl_free(void *ptr) {
         return;
     }
 
-    printf("putting to unsorted bin\n");
     // coalece front and back if free
     // 1. somehow, the bit after set_foot is not preserved here, hence, no backward coalecing on 128
     if (!prev_in_use(chunk)) {
-        printf("prev chunk not in use, backward coalecing\n");
         mchunkptr prev_chunk = prev_chunk(chunk);
         coalece(prev_chunk, chunk);
         chunk = prev_chunk;
     }
     // need to check if the next chunk is top(mmaped)
     if (!is_mmaped(next_chunk(chunk)) && next_chunk_free(chunk)) {
-        printf("next chunk not in allocated, forward coalecing\n");
         mchunkptr next_chunk = next_chunk(chunk);
         coalece(chunk, next_chunk);
     }
 
-    printf("setting foot\n");
     set_foot(chunk, size);
-    printf("fetching next chunk\n");
     mchunkptr next_chunk = next_chunk(chunk);
-    printf("unsetting prev in use in the next chunk, next chunk size: %zu\n", next_chunk->size);
     unset_prev_in_use(next_chunk);
 
-    printf("inserting to head\n");
     insert_at_head(bins, UNSORTED_BIN_IDX, chunk);
 }
 
