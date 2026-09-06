@@ -22,7 +22,7 @@ typedef struct mem_chunk *mchunkptr;
 #define chunk_size(c)      ((c)->size & ~FLAG_BITS)
 #define next_chunk(c)      ((mchunkptr) ((char *) (c) + ((c)->size + 2 * SIZE_T)))
 #define prev_chunk(c)      ((mchunkptr) ((char *) (c) - ((c)->prev_size + 2 * SIZE_T)))
-#define next_chunk_free(c) (prev_in_use(next_chunk(next_chunk(c))))
+#define next_chunk_free(c) (!prev_in_use(next_chunk(next_chunk(c))))
 
 #define bump_top_to_offset(t, s) ((t) = (mchunkptr) ((char *) (t) + (s) + (2 * SIZE_T)))
 

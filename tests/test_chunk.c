@@ -41,3 +41,26 @@ Test(chunk_ops, next_chunk_identifies_prev_chunk_free) {
     cr_assert(prev_in_use(chunk2));
     cr_assert_eq(chunk2->prev_size, 16);
 }
+
+Test(chunk_ops, next_chunk_free_test) {
+    struct mem_chunk c[2] = {{
+                                 prev_size : 0,
+                                 size : 16,
+                                 next : NULL,
+                                 back : NULL
+                             }, // cannot put more then 16, coz then will have to allocate that
+                             {prev_size : 16, size : 16, next : NULL, back : NULL},
+                             // sets the prev_in_use bit for 2nd chunk to 1: [1111] [0001]
+                             {prev_size : 0, size : 0xf1, next : NULL, back : NULL}};
+
+    mchunkptr chunk1 = &c[0];
+    mchunkptr chunk2 = &c[1];
+    mchunkptr chunk3 = &c[2];
+
+    cr_assert_eq(next_chunk(chunk1), chunk2);
+    cr_assert_eq(next_chunk(chunk2), chunk3);
+    cr_assert_eq(prev_chunk(chunk2), chunk1);
+
+    cr_assert(
+        !next_chunk_free(chunk1)); // checking to see if 2nd chunk is in use(which it is) via chunk1
+}
