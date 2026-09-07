@@ -96,7 +96,7 @@ typedef struct bin *binptr;
 
 #define bin_at_size(bin, size) (state_ptr->bin[bin_ix((size))])
 #define is_bin_empty(bin, i)   (state_ptr->bin[(i)].next == &state_ptr->bin[(i)])
-#define unsorted_bins()        (&state_ptr->bins[1])
+#define unsorted_bins()        (&state_ptr->bins[UNSORTED_BIN_IDX])
 
 #define split_chunk(c, s)                                                                          \
     do {                                                                                           \
