@@ -4,6 +4,9 @@
 
 #include "bins.h"
 
+_Static_assert(MIN_LARGE_SIZE == (1u << LARGE_SHIFT),
+               "LARGE_SHIFT must equal log2(MIN_LARGE_SIZE)");
+
 Test(bin_correctness, request2size_generates_malloc_aligned_output) {
     cr_assert_eq(request2size(8), MIN_SIZE);
     cr_assert_eq(request2size(32), 48);

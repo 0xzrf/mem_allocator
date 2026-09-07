@@ -32,6 +32,43 @@ typedef uint64_t binmap_word;
 #define bm_clear(map, i)     ((map)[bm_word(i)] &= ~bm_bit(i))
 #define bm_is_marked(map, i) (((map)[bm_word(i)] & bm_bit(i)) != 0)
 
+#define BIN_NONE ((unsigned) -1)
+
+static inline void bm_init(binmap_word *map) {
+    for (unsigned w = 0; w < BINMAP_WORDS; w++)
+        map[w] = 0;
+}
+
+static inline unsigned bin_find_next_nonempty(const bin *arr, binmap_word *map, unsigned from) {
+    unsigned i = from;
+
+    while (i < NBINS) {
+        unsigned w = bm_word(i);
+
+        /* Keep only the bits at or above i -- never look backwards.
+         * bm_bit(i) - 1 is all ones BELOW i; ~ flips it to all ones AT/ABOVE. */
+        binmap_word word = map[w] & ~(bm_bit(i) - 1);
+
+        if (word == 0) { /* 64 bins ruled out by one compare */
+            i = (w + 1) * BINMAP_BITS;
+            continue;
+        }
+
+        /* Jump straight to the lowest set bit instead of testing bit by bit. */
+        i = w * BINMAP_BITS + (unsigned) __builtin_ctzll(word);
+        if (i >= NBINS)
+            return BIN_NONE; /* bits past the last real bin */
+
+        if (arr[i].next == &arr[i]) { /* marked, but actually empty */
+            bm_clear(map, i);         /* THE ONLY place clearing happens */
+            i++;
+            continue;
+        }
+        return i;
+    }
+    return BIN_NONE;
+}
+
 static inline unsigned highest_set_bit(size_t x) {
     return (unsigned) (63 - __builtin_clzll((unsigned long long) x));
 }

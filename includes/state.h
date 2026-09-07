@@ -20,8 +20,17 @@ typedef struct {
     mchunkptr top_allocation; // used to fetch data and merge freed data when nothing else is free
     bin bins[NBINS];
     bin fastbins[NFASTBIN];
-    size_t binmap[2]; // an array of bytes (64 * 2 bits), to cover NBINS bits
+    binmap_word binmap[BINMAP_WORDS];
 } mstate;
+
+#define mark_bin(i)                                                                                \
+    do {                                                                                           \
+        if ((i) >= 2)                                                                              \
+            bm_mark(state_ptr->binmap, (i));                                                       \
+    } while (0)
+#define unmark_bin(i)           bm_clear(state_ptr->binmap, (i))
+#define bin_is_marked(i)        bm_is_marked(state_ptr->binmap, (i))
+#define next_nonempty_bin(from) bin_find_next_nonempty(state_ptr->bins, state_ptr->binmap, (from))
 
 typedef mstate *mstateptr;
 #endif
