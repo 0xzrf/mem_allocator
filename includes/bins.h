@@ -10,12 +10,19 @@
 
 #define MAX_FAST_BIN_SIZE 80
 #define NBINS_SMALL       32
-#define NBINS_LARGE       40
+#define NBINS_LARGE       64
 #define NBINS             (NBINS_SMALL + NBINS_LARGE)
 #define MIN_LARGE_SIZE    (NBINS_SMALL * MALLOC_ALIGN)
 #define MAX_FASTBIN_SIZE  80
 #define NFASTBIN          ((MAX_FASTBIN_SIZE >> 4) + 1)
 #define UNSORTED_BIN_IDX  1
+#define LARGE_SHIFT       9
+#define SUBBINS_LOG       2
+#define SUBBINS           (1u << SUBBINS_LOG)
+
+static inline unsigned highest_set_bit(size_t x) {
+    return (unsigned) (63 - __builtin_clzll((unsigned long long) x));
+}
 
 typedef struct bin {
     struct bin *next;
@@ -25,8 +32,18 @@ typedef struct bin {
 typedef struct bin *binptr;
 
 // macros
-// large bin not supported yet
-#define bin_ix(size) ((size) < MIN_LARGE_SIZE ? (size) / MALLOC_ALIGN : 0)
+#define bin_ix(size) ((size) < MIN_LARGE_SIZE ? (size) / MALLOC_ALIGN : large_bin_ix((size)))
+
+static inline unsigned largebin_ix(size_t size) {
+    unsigned m = highest_set_bit(size);
+    unsigned octave = m - LARGE_SHIFT;
+    unsigned subbin = (unsigned) ((size >> (m - SUBBINS_LOG)) & (SUBBINS - 1));
+    unsigned i = octave * SUBBINS + subbin;
+
+    if (i >= NBINS_LARGE)
+        i = NBINS_LARGE - 1; /* catch-all top bin */
+    return NBINS_SMALL + i;
+}
 
 #define bin_at_size(bin, size) (state_ptr->bin[bin_ix((size))])
 #define is_bin_empty(bin, i)   (state_ptr->bin[(i)].next == &state_ptr->bin[(i)])
