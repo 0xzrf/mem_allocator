@@ -3,6 +3,8 @@
 
 #include "types.h"
 #include "chunk.h"
+#include <stdint.h>
+
 // this is the MIN_SIZE for the mem_chunk struct
 #define MIN_SIZE          32
 #define MALLOC_ALIGN      (SIZE_T * 2)
@@ -15,24 +17,24 @@
 #define MIN_LARGE_SIZE    (NBINS_SMALL * MALLOC_ALIGN)
 #define MAX_FASTBIN_SIZE  80
 #define NFASTBIN          ((MAX_FASTBIN_SIZE >> 4) + 1)
-#define UNSORTED_BIN_IDX  1
+#define UNSORTED_BIN_IDX  0
 #define LARGE_SHIFT       9
 #define SUBBINS_LOG       2
 #define SUBBINS           (1u << SUBBINS_LOG)
+#define BINMAP_BITS       64
+#define BINMAP_WORDS      ((NBINS + BINMAP_BITS - 1) / BINMAP_BITS)
+
+typedef uint64_t binmap_word;
+
+#define bm_word(i)           ((unsigned) (i) / BINMAP_BITS)
+#define bm_bit(i)            (((binmap_word) 1) << ((unsigned) (i) % BINMAP_BITS))
+#define bm_mark(map, i)      ((map)[bm_word(i)] |= bm_bit(i))
+#define bm_clear(map, i)     ((map)[bm_word(i)] &= ~bm_bit(i))
+#define bm_is_marked(map, i) (((map)[bm_word(i)] & bm_bit(i)) != 0)
 
 static inline unsigned highest_set_bit(size_t x) {
     return (unsigned) (63 - __builtin_clzll((unsigned long long) x));
 }
-
-typedef struct bin {
-    struct bin *next;
-    struct bin *back;
-} bin;
-
-typedef struct bin *binptr;
-
-// macros
-#define bin_ix(size) ((size) < MIN_LARGE_SIZE ? (size) / MALLOC_ALIGN : large_bin_ix((size)))
 
 static inline unsigned largebin_ix(size_t size) {
     unsigned m = highest_set_bit(size);
@@ -44,6 +46,16 @@ static inline unsigned largebin_ix(size_t size) {
         i = NBINS_LARGE - 1; /* catch-all top bin */
     return NBINS_SMALL + i;
 }
+
+typedef struct bin {
+    struct bin *next;
+    struct bin *back;
+} bin;
+
+typedef struct bin *binptr;
+
+// macros
+#define bin_ix(size) ((size) < MIN_LARGE_SIZE ? (size) / MALLOC_ALIGN : large_bin_ix((size)))
 
 #define bin_at_size(bin, size) (state_ptr->bin[bin_ix((size))])
 #define is_bin_empty(bin, i)   (state_ptr->bin[(i)].next == &state_ptr->bin[(i)])

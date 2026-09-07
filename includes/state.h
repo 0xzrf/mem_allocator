@@ -20,6 +20,7 @@ typedef struct {
     mchunkptr top_allocation; // used to fetch data and merge freed data when nothing else is free
     bin bins[NBINS];
     bin fastbins[NFASTBIN];
+    size_t binmap[2]; // an array of bytes (64 * 2 bits), to cover NBINS bits
 } mstate;
 
 typedef mstate *mstateptr;
