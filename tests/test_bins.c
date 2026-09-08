@@ -15,21 +15,25 @@ Test(bin_correctness, request2size_generates_malloc_aligned_output) {
 
 Test(bin_correctness, bins_point_at_the_right_free_chunks) {
     // init bin(s)
-    bin fastbins[MAX_FASTBIN_SIZE >> 4] = {0};
+    bin fastbins[NFASTBIN] = {0}; /* NFASTBIN, not MAX_FASTBIN_SIZE>>4:
+                                   * bin_ix(80) == 5, so 5 slots is one short */
 
     struct dummy_mem_stat {
-        bin fastbins[MAX_FASTBIN_SIZE >> 4];
+        bin fastbins[NFASTBIN];
     };
 
     struct dummy_mem_stat mem_state = {fastbins : fastbins};
     struct dummy_mem_stat *state_ptr = &mem_state;
 
-    for (size_t i = 0; i <= MAX_FASTBIN_SIZE >> 4; i++) {
+    for (size_t i = 0; i < NFASTBIN; i++) {
         init_bin(fastbins, i);
     }
 
     // populate the bin(s)
-    struct mem_chunk chunks[4] = {};
+    /* 5 slots for 4 chunks: set_foot() writes the footer into the NEXT chunk's
+     * prev_size, so the last chunk needs a landing slot after it. A real heap
+     * uses a fencepost for exactly this reason. */
+    struct mem_chunk chunks[5] = {};
 
     for (size_t i = 0; i < 4; i++) {
         mchunkptr c = &chunks[i];

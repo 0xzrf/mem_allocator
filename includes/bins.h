@@ -24,6 +24,13 @@
 #define BINMAP_BITS       64
 #define BINMAP_WORDS      ((NBINS + BINMAP_BITS - 1) / BINMAP_BITS)
 
+typedef struct bin {
+    struct bin *next;
+    struct bin *back;
+} bin;
+
+typedef struct bin *binptr;
+
 typedef uint64_t binmap_word;
 
 #define bm_word(i)           ((unsigned) (i) / BINMAP_BITS)
@@ -84,30 +91,39 @@ static inline unsigned largebin_ix(size_t size) {
     return NBINS_SMALL + i;
 }
 
-typedef struct bin {
-    struct bin *next;
-    struct bin *back;
-} bin;
-
-typedef struct bin *binptr;
-
 // macros
-#define bin_ix(size) ((size) < MIN_LARGE_SIZE ? (size) / MALLOC_ALIGN : large_bin_ix((size)))
+/* Small sizes get an exact-size bin; large sizes get a log-spaced range bin.
+ * Bin 0 is the unsorted bin and bin 1 is unused, which is why the smallest
+ * possible chunk (MIN_SIZE = 32) lands at index 2. */
+#define bin_ix(size) ((size) < MIN_LARGE_SIZE ? (unsigned) ((size) / MALLOC_ALIGN) : largebin_ix((size)))
+
+/* Fastbins are a SEPARATE array with its own, smaller index space.
+ * Reusing bin_ix here would index past the end: bin_ix(80) == 5 while the
+ * array is NFASTBIN long. */
+#define fastbin_ix(size) ((unsigned) ((size) / MALLOC_ALIGN))
 
 #define bin_at_size(bin, size) (state_ptr->bin[bin_ix((size))])
 #define is_bin_empty(bin, i)   (state_ptr->bin[(i)].next == &state_ptr->bin[(i)])
 #define unsorted_bins()        (&state_ptr->bins[UNSORTED_BIN_IDX])
 
-#define split_chunk(c, s)                                                                          \
+/* Can `c` be cut into a chunk of payload `s` plus a legal leftover chunk?
+ * The leftover needs its own header, so it costs s + CHUNK_OVERHEAD out of c,
+ * and what remains must still be at least MIN_PAYLOAD. */
+#define can_split(c, s) (chunk_size(c) >= (s) + CHUNK_OVERHEAD + MIN_PAYLOAD)
+
+/* Shrink `c` to payload `s` and hand back the leftover chunk.
+ * Does NO list surgery -- the caller unlinks `c` first and files the
+ * remainder wherever it belongs (the unsorted bin). */
+#define split_chunk(c, s, out_rem)                                                                 \
     do {                                                                                           \
-        size_t size_before = chunk_size((c));                                                      \
-        size_t new_chunk_size = size_before - (s);                                                 \
-        set_size((c), s);                                                                          \
-        mchunkptr new_chunk = next_chunk(c);                                                       \
-        set_size(new_chunk, new_chunk_size);                                                       \
-        set_prev_in_use(new_chunk);                                                                \
-        new_chunk->back = (c)->back;                                                               \
-        new_chunk->next = (c)->next;                                                               \
+        size_t size_before_ = chunk_size((c));                                                     \
+        set_size((c), (s));                                                                        \
+        mchunkptr rem_ = next_chunk(c);                                                            \
+        /* what is left after taking s payload AND the remainder's header */                       \
+        set_size(rem_, size_before_ - (s) - CHUNK_OVERHEAD);                                       \
+        set_prev_in_use(rem_); /* c is in use now */                                               \
+        set_foot(rem_, chunk_size(rem_));                                                          \
+        (out_rem) = rem_;                                                                          \
     } while (0)
 
 #define insert_at_head(bin, i, c)                                                                  \

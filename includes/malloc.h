@@ -28,6 +28,15 @@ static void *fetch_mem_from_top(size_t);
 // Test-only hooks. Compiled in by `make test` (which passes -DTEST to BOTH the
 // test binary and the objects in src/), never in a normal or release build.
 void reset_mem_state(void);
+
+/* Read-only probes so tests can inspect bin/binmap state without the
+ * allocator having to expose state_ptr. */
+unsigned test_bin_ix(size_t size);
+int      test_bin_is_marked(unsigned i);
+unsigned test_next_nonempty_bin(unsigned from);
+int      test_bin_is_empty(unsigned i);
+size_t   test_bin_count(unsigned i);
+size_t   test_largest_free(void);
 #endif
 
 #endif

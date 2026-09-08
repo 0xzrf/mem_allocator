@@ -5,8 +5,15 @@
 #include "chunk.h"
 #include "bins.h"
 
-#define mmap_at_offset(size)                                                                       \
-    mmap((size), PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
+/* `addr` is a HINT, not a guarantee -- the kernel may place the mapping
+ * anywhere. Callers MUST compare the result against what they asked for. */
+#define mmap_at_offset(addr)                                                                       \
+    mmap((addr), PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
+#define mmap_bytes_at(addr, len)                                                                   \
+    mmap((addr), (len), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)
+
+/* Whole pages needed to hold `bytes`. */
+#define pages_for(bytes) ((((bytes) + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE)
 
 #define MAX_FREE_BIT             0x1
 #define any_bin_free()           (state_ptr->max_free_bin & MAX_FREE_BIT)
